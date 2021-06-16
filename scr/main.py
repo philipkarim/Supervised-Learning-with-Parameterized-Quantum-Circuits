@@ -15,46 +15,13 @@ import qiskit
 from qiskit import transpile, assemble
 from qiskit.visualization import *
 
-from qiskit import QuantumCircuit, assemble, Aer
-from qiskit.visualization import plot_histogram
 
 
-n = 8
-n_q = n
-n_b = n
-qc_output = QuantumCircuit(n_q,n_b)
-
-for j in range(n):
-    qc_output.measure(j,j)
-
-qc_output.draw()
-plt.show()
-sim = Aer.get_backend('qasm_simulator')  # this is the simulator we'll use
-qobj = assemble(qc_output)  # this turns the circuit into an object our backend can run
-result = sim.run(qobj).result()  # we run the experiment and get the result from that experiment
-#from the results, we get a dictionary containing the number of times (counts)
-#each result appeared
-counts = result.get_counts()
-#and display it on a histogram
-plot_histogram(counts)
-
-plt.show()
-print(qc_output)
-
-"""
-qc_encode = QuantumCircuit(n)
-qc_encode.x(7)
-qc_encode.draw()
-
-qc = compose(qc_encode + qc_output)
-qc.draw()
-"""
-#class QuantumCircuit:
-"""
+class QuantumCircuit:
+    """
     This class provides a simple interface for interaction 
     with the quantum circuit 
-"""
-"""  
+    """ 
     def __init__(self, n_qubits, backend, shots):
         # --- Circuit definition ---
         self._circuit = qiskit.QuantumCircuit(n_qubits)
@@ -96,5 +63,4 @@ simulator = qiskit.Aer.get_backend('qasm_simulator')
 circuit = QuantumCircuit(1, simulator, 100)
 print('Expected value for rotation pi {}'.format(circuit.run([np.pi])[0]))
 circuit._circuit.draw()
-
-"""
+print(circuit._circuit.draw())
