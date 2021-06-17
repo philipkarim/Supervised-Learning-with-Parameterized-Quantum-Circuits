@@ -162,3 +162,10 @@ with torch.no_grad():
         
         count += 1
     plt.show()
+
+
+
+#Steps:
+Rewrite the program
+Try with sgd or gradient descent instead of adam to see if the accuracy reduces
+Try with the ansatz from project 2
