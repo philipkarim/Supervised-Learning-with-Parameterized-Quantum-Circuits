@@ -1,24 +1,27 @@
+#This import is just because of some duplicate of mpi or armadillo on the computer
 import os
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
+#Importing packages 
 import numpy as np
 import matplotlib.pyplot as plt
 
+#Importing pytorch packages
 import torch
 from torchvision import datasets, transforms
 import torch.optim as optim
 import torch.nn.functional as F
 
+#Importing qiskit
 import qiskit
 from qiskit.visualization import *
 from quantumnet import *
 
 simulator = qiskit.Aer.get_backend('qasm_simulator')
 
-circuit = QuantumCircuit(1, simulator, 100)
+circuit = QuantumCircuit(2, simulator, 100)
 print('Expected value for rotation pi {}'.format(circuit.run([np.pi])[0]))
-circuit._circuit.draw()
-#print(circuit._circuit.draw())
+print(circuit.QCircuit)
 
 # Defining the train data
 n_samples = 100
@@ -166,6 +169,6 @@ with torch.no_grad():
 
 
 #Steps:
-Rewrite the program
-Try with sgd or gradient descent instead of adam to see if the accuracy reduces
-Try with the ansatz from project 2
+#Rewrite the program
+#Try with sgd or gradient descent instead of adam to see if the accuracy reduces
+#Try with the ansatz from project 2

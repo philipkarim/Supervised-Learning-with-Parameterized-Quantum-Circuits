@@ -7,33 +7,49 @@ import torch
 
 #This functions has every class regarding the neural networks
 class QuantumCircuit:
-    """
-    This class provides a simple interface for interaction 
-    with the quantum circuit 
-    """ 
     def __init__(self, n_qubits, backend, shots):
-        # --- Circuit definition ---
-        self._circuit = qiskit.QuantumCircuit(n_qubits)
+        """
+        Class that creates the quantum circuit, outline of the class is
+        based on the framework in the qiskit textbook
+
+        Args:
+            n_qubits: Amount of qubits in circuit
+
+        """
+        #creating the circuit
+        self.QCircuit = qiskit.QuantumCircuit(n_qubits)
         
-        all_qubits = [i for i in range(n_qubits)]
+        #Amount of qubits
+        all_qubits=list(range(0,n_qubits))
+
+        #Variational parameter
         self.theta = qiskit.circuit.Parameter('theta')
         
-        self._circuit.h(all_qubits)
-        self._circuit.barrier()
-        self._circuit.ry(self.theta, all_qubits)
+        #quantum gates
+        self.QCircuit.h(all_qubits)
+        self.QCircuit.barrier()
+        self.QCircuit.ry(self.theta, all_qubits)
         
-        self._circuit.measure_all()
+        self.QCircuit.measure_all()
         # ---------------------------
 
         self.backend = backend
         self.shots = shots
     
-    def run(self, thetas):
-        t_qc = transpile(self._circuit,
-                         self.backend)
-        qobj = assemble(t_qc,
-                        shots=self.shots,
-                        parameter_binds = [{self.theta: theta} for theta in thetas])
+    def run(self, parameter_theta):
+        """
+        Running the simulation simulation
+        Args: 
+            thetas: Number of variational parameters
+        
+        Returns:
+            np.array([expectation])  : Expectation value
+        """
+        #Standard procedure when running the circuit
+        theta_dict=[{self.theta: theta_val} for theta_val in parameter_theta]
+
+        transpiled_qc = transpile(self.QCircuit, self.backend)
+        qobj = assemble(transpiled_qc, shots=self.shots, parameter_binds = theta_dict)
         job = self.backend.run(qobj)
         result = job.result().get_counts()
         
