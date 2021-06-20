@@ -17,55 +17,52 @@ import qiskit
 from qiskit.visualization import *
 from quantumnet import *
 
+#Just testing the circuit
 simulator = qiskit.Aer.get_backend('qasm_simulator')
+circuit = QuantumCircuit(1, simulator, 100)
+#print('Expected value for rotation pi {}'.format(circuit.run([np.pi])[0]))
+#print(circuit.QCircuit)
 
-circuit = QuantumCircuit(2, simulator, 100)
-print('Expected value for rotation pi {}'.format(circuit.run([np.pi])[0]))
-print(circuit.QCircuit)
 
-# Defining the train data
-n_samples = 100
+#Preparing the data
+n_samples_train = 100
+n_samples_test =50
 
 X_train = datasets.MNIST(root='./data', train=True, download=True,transform=transforms.Compose([transforms.ToTensor()]))
+X_test = datasets.MNIST(root='./data', train=False, download=True,transform=transforms.Compose([transforms.ToTensor()]))
 
-# Leaving only labels 0 and 1 
-idx = np.append(np.where(X_train.targets == 0)[0][:n_samples], 
-                np.where(X_train.targets == 1)[0][:n_samples])
 
-X_train.data = X_train.data[idx]
-X_train.targets = X_train.targets[idx]
+# Want to deal with the numbers 1 and 7 
+idx_train = np.append(np.where(X_train.targets == 0)[0][:n_samples_train], np.where(X_train.targets == 1)[0][:n_samples_train])
+idx_test = np.append(np.where(X_test.targets == 0)[0][:n_samples_test], np.where(X_test.targets == 1)[0][:n_samples_test])
 
+#Setting the 1's and 7's as train and test data
+X_train.data = X_train.data[idx_train]
+X_train.targets = X_train.targets[idx_train]
+X_test.data = X_test.data[idx_test]
+X_test.targets = X_test.targets[idx_test]
+
+#Preparing the dataloader
 train_loader = torch.utils.data.DataLoader(X_train, batch_size=1, shuffle=True)
+test_loader = torch.utils.data.DataLoader(X_test, batch_size=1, shuffle=True)
 
-n_samples_show = 6
+#Samples to show from the data
+n_data = 6
 
 data_iter = iter(train_loader)
-fig, axes = plt.subplots(nrows=1, ncols=n_samples_show, figsize=(10, 3))
+fig, axes = plt.subplots(nrows=1, ncols=n_data, figsize=(10, 3))
 
-while n_samples_show > 0:
+while n_data > 0:
     images, targets = data_iter.__next__()
 
-    axes[n_samples_show - 1].imshow(images[0].numpy().squeeze(), cmap='gray')
-    axes[n_samples_show - 1].set_xticks([])
-    axes[n_samples_show - 1].set_yticks([])
-    axes[n_samples_show - 1].set_title("Labeled: {}".format(targets.item()))
+    axes[n_data - 1].imshow(images[0].numpy().squeeze(), cmap='gray')
+    axes[n_data - 1].set_xticks([])
+    axes[n_data - 1].set_yticks([])
+    axes[n_data - 1].set_title("Labeled: {}".format(targets.item()))
     
-    n_samples_show -= 1
-plt.show()
+    n_data -= 1
+#plt.show()
 
-#Creating the test data
-n_samples = 50
-
-X_test = datasets.MNIST(root='./data', train=False, download=True,
-                        transform=transforms.Compose([transforms.ToTensor()]))
-
-idx = np.append(np.where(X_test.targets == 0)[0][:n_samples], 
-                np.where(X_test.targets == 1)[0][:n_samples])
-
-X_test.data = X_test.data[idx]
-X_test.targets = X_test.targets[idx]
-
-test_loader = torch.utils.data.DataLoader(X_test, batch_size=1, shuffle=True)
 
 #Creating the network
 class Net(nn.Module):
@@ -95,6 +92,9 @@ class Net(nn.Module):
 #Training the network
 model = Net()
 optimizer = optim.Adam(model.parameters(), lr=0.001)
+#loss_func = nn.CrossEntropyLoss()
+#loss_func = nn.BCEWithLogitsLoss()
+#loss_func = nn.MSELoss()
 loss_func = nn.NLLLoss()
 
 epochs = 20
@@ -125,7 +125,7 @@ plt.xlabel('Training Iterations')
 plt.ylabel('Neg Log Likelihood Loss')
 plt.show()
 
-#Testing the nwtwork
+#Testing the network
 model.eval()
 with torch.no_grad():
     
@@ -141,17 +141,16 @@ with torch.no_grad():
         
     print('Performance on test data:\n\tLoss: {:.4f}\n\tAccuracy: {:.1f}%'.format(
         sum(total_loss) / len(total_loss),
-        correct / len(test_loader) * 100)
-        )
+        correct / len(test_loader) * 100))
 
-n_samples_show = 6
+n_data_train= 6
 count = 0
-fig, axes = plt.subplots(nrows=1, ncols=n_samples_show, figsize=(10, 3))
+fig, axes = plt.subplots(nrows=1, ncols=n_data_train, figsize=(10, 3))
 
 model.eval()
 with torch.no_grad():
     for batch_idx, (data, target) in enumerate(test_loader):
-        if count == n_samples_show:
+        if count == n_data_train:
             break
         output = model(data)
         

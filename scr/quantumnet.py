@@ -29,9 +29,7 @@ class QuantumCircuit:
         self.QCircuit.h(all_qubits)
         self.QCircuit.barrier()
         self.QCircuit.ry(self.theta, all_qubits)
-        
         self.QCircuit.measure_all()
-        # ---------------------------
 
         self.backend = backend
         self.shots = shots
@@ -46,22 +44,30 @@ class QuantumCircuit:
             np.array([expectation])  : Expectation value
         """
         #Standard procedure when running the circuit
-        theta_dict=[{self.theta: theta_val} for theta_val in parameter_theta]
+        theta_dict_list=[]
+        for i in range(0,len(parameter_theta)):
+            theta_dict={}
+            theta_dict[self.theta]=parameter_theta[i]
+            theta_dict_list.append(theta_dict)
+        #Or maybe this way? [{1:1}, {2:2}] instead of [{1:1, 2:2}]?
+        #theta_dict=[{self.theta: theta_val} for theta_val in parameter_theta]
 
         transpiled_qc = transpile(self.QCircuit, self.backend)
-        qobj = assemble(transpiled_qc, shots=self.shots, parameter_binds = theta_dict)
-        job = self.backend.run(qobj)
+        quantumobject = assemble(transpiled_qc, shots=self.shots, parameter_binds = theta_dict_list)
+        job = self.backend.run(quantumobject)
+        #Gets the counts
         result = job.result().get_counts()
         
+        #Saves values and states as an array
         counts = np.array(list(result.values()))
         states = np.array(list(result.keys())).astype(float)
-        
+                
         # Compute probabilities for each state
         probabilities = counts / self.shots
         # Get state expectation
-        expectation = np.sum(states * probabilities)
+        expec = np.sum(states * probabilities)
         
-        return np.array([expectation])
+        return np.array([expec])
 
 class HybridFunction(Function):
     """ Hybrid quantum - classical function definition """
@@ -108,3 +114,4 @@ class Hybrid(nn.Module):
         
     def forward(self, input):
         return HybridFunction.apply(input, self.quantum_circuit, self.shift)
+
