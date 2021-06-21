@@ -159,7 +159,7 @@ X_train,X_test, y_train, y_test = train_test_split(x,y,test_size=0.8)
 #print('train dataset shape', X_train.shape)
 #print('val dataset shape', X_val.shape)
 #print('test dataset shape', X_test.shape)
-
+"""
 p = x.shape[1] #number of features
 
 p_classic=1 #Classical measurements
@@ -224,13 +224,11 @@ prediction=run_qc(qc_enc)
 print('Prediction:',prediction,'Target:',target[0])
 print(qc_enc)
 
-def predict(n_params)
-
-
+"""
 
 #This functions has every class regarding the neural networks
 class QML:
-    def __init__(self, ansatz, n_qubits, n_cbits, backend="qasm_simulator", shots=1024):
+    def __init__(self, ansatz, n_qubits, n_cbits, n_parameters, backend="qasm_simulator", shots=1024):
         """
         Class that creates the quantum circuit, outline of the class is
         based on the framework in the qiskit textbook
@@ -261,9 +259,12 @@ class QML:
         self.n_cbits=n_cbits
         self.backend = backend
         self.shots = shots
+        self.n_parameters=n_parameters
 
         #Variational parameter
-        self.theta = qk.circuit.Parameter('theta')
+        #self.theta = qk.circuit.Parameter('theta')
+
+        #self.theta=np.random.uniform(size=)
 
         #Registers
         self.data_register = qk.QuantumRegister(n_qubits)
@@ -289,7 +290,7 @@ class QML:
         
         return self.qc_enc
 
-    def make_param_cir(self, n_parameters):
+    def make_param_cir(self, thetas):
         """
         Creates the parameterized circuit
 
@@ -300,40 +301,77 @@ class QML:
         Returns: 
             Predicted value (float))
         """
-        self.n_parameters=n_parameters
-        self.qc_ansatz = qk.QuantumCircuit(data_register, classical_register)
-
-        for rot_y in range(self.n_qubits):
-            self.qc_ansatz.ry(self.theta[rot_y], data_register[rot_y])
-            if rot_y!=0:
-                for con_x in range(rot_y):
-                    self.qc_ansatz.cx(data_register[con_x], data_register[rot_y])
-
-        ansatz_parts=n_parameters//self.n_qubits
-        reminder_gates=n_parameters%self.n_qubits
+        self.thetas=thetas
+        self.qc_ansatz = qk.QuantumCircuit(self.data_register, self.classical_register)
         
-        #Copies the ansatz multiple times to ensure that the wanted number of parameters is used:
-        for ansatz in range(ansatz_parts):
-            self.qc_ansatz.compose(self.qc_ansatz, front=False, inplace=True)
+        ansatz_parts=self.n_parameters//self.n_qubits
+        reminder_gates=self.n_parameters%self.n_qubits
 
-        #Adds the extra reminder gates
-        for gates in range():
-            
-        
-             
+        if self.ansatz==0:
+            #Creating the ansatz circuit:
+            if reminder_gates!=0:
+                blocks=ansatz_parts+1
+            else:
+                blocks=ansatz_parts
 
+            for block in range(blocks):
+                for rot_y in range(self.n_qubits):
+                    if rot_y+4*block<self.n_parameters:
+                        self.qc_ansatz.ry(self.thetas[rot_y+4*block], self.data_register[rot_y])
+                    if rot_y!=0:
+                        for con_x in range(rot_y):
+                            self.qc_ansatz.cx(self.data_register[con_x], self.data_register[rot_y])
+
+            """
+            #Copies the ansatz multiple times to ensure that the wanted number of parameters is used:
+            if ansatz_parts>1:
+                for ansatz in range(ansatz_parts-1):
+                    self.qc_ansatz.compose(self.qc_ansatz, front=False, inplace=True)
+
+            #Adds the extra reminder gates
+            for rot_y_reminder in range(reminder_gates):
+                self.qc_ansatz.ry(self.thetas[rot_y_reminder], self.data_register[rot_y_reminder])
+                if rot_y_reminder!=0:
+                    for con_x_reminder in range(rot_y_reminder):
+                        self.qc_ansatz.cx(self.data_register[con_x_reminder], self.data_register[rot_y_reminder])
+            """
         return self.qc_ansatz
     
-    def create_qcircuit(self, sample, n_parameters):
-        make_encoder_cir(sample)
-        make_param_cir(n_parameters)
+    def create_qcircuit(self, sample, parameters):
+        #Assigns values to the theta parameter defined in init
+        #self.theta.assign(self.theta,parameters)
+
+        #for thet in range(len(parameters)):
+        #    self.theta[thet]=parameters[thet]
+
+        self.make_encoder_cir(sample)
+        self.make_param_cir(parameters)
 
         self.qc_enc.compose(self.qc_ansatz, front=False, inplace=True)
         self.qc_enc.measure(self.data_register[-1],self.classical_register[0])
 
-        return self.qc_enc
+        print(self.qc_enc)
 
-    def predict(self, X_design, thetas):
+        return self.qc_enc
+    
+    def predict(self):
+        job = qk.execute(self.qc_enc,
+                        backend=qk.Aer.get_backend(self.backend),
+                        shots=self.shots,
+                        seed_simulator=10
+                        )
+        results = job.result()
+        results = results.get_counts(self.qc_enc)
+
+        prediction = 0
+        for key,value in results.items():
+            #print(key, value)
+            if key == '1':
+                prediction += value
+        prediction/=self.shots
+
+        return prediction
+#    def predict(self, X_design, thetas):
         """
         Running the simulation simulation
         Args: 
@@ -343,6 +381,7 @@ class QML:
         Returns: 
             Predicted value (float))
         """
+"""
         #Standard procedure when running the circuit
         theta_dict_list=[]
         for i in range(0,len(parameter_theta)):
@@ -368,6 +407,8 @@ class QML:
         expec = np.sum(states * probabilities)
         
         return np.array([expec])
+"""
+
 
 #First expand the example now to iris dataset
 #Rewrite to iris dataset, place everything inside a function, where the ansatz can be chosen as a parameter
@@ -391,4 +432,20 @@ q0_2: ─┤ RY(\theta0)├──────┤ X ├┤ X ├──┼──�
 q0_3: ┤ RY(\theta0)  ├───────────────┤ X ├┤ X ├┤ X ├
       └──────────────┘               └───┘└───┘└───┘
 c0: 1/══════════════════════════════════════════════
+"""
+
+n_parameters=10
+qc=QML(0, x.shape[1],1,n_parameters, backend="qasm_simulator", shots=1024)
+thetas = np.random.uniform(size=n_parameters)
+qc.create_qcircuit(x[0],thetas)
+prediction=qc.predict()
+print(prediction)
+#Next steps:
+"""
+-Fixt the looping over the design matrix inserting one and one sample
+-Try training the thing
+-Try adding epochs and such to see how much the loss/accuracy is
+-Maybe spread out the ansatz making it look better
+-Add another ansatz, cool one in lin 6 bookmark
+-try both ansatzes on breast cancer dataset
 """
