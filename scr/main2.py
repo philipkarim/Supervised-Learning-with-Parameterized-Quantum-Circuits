@@ -37,16 +37,16 @@ scaler = StandardScaler();
 scaler.fit(X_train)
 X_train_scaled = scaler.transform(X_train)
 X_test_scaled = scaler.transform(X_test)
-print(X_test)
-print(X_test_scaled)
+#print(X_test)
+#print(X_test_scaled)
 
 #Or use this method:
-scaler = MinMaxScaler();  
-scaler.fit(X_train)
-X_train_scaled = scaler.transform(X_train)
-X_test_scaled = scaler.transform(X_test)
-print(X_test)
-print(X_test_scaled)
+scaler2 = MinMaxScaler();  
+scaler2.fit(X_train)
+X_train_scaled = scaler2.transform(X_train)
+X_test_scaled = scaler2.transform(X_test)
+#print(X_test)
+#print(X_test_scaled)
 
 #Training
 n_parameters=4
@@ -54,9 +54,32 @@ qc=QML(0, X.shape[1],1,n_parameters, backend="qasm_simulator", shots=1024)
 
 #Initialisation of thetas
 initial_thetas = np.random.uniform(size=n_parameters)
-
 predictions=qc.predict(X_train,initial_thetas)
 
+for pr in range(len(y_test)):
+    print(predictions[pr],y_test[pr])
+
+
+def cross_entropy(predictions, targets, epsilon=1e-12):
+    """
+    Computes cross entropy between targets (encoded as one-hot vectors)
+    and predictions. 
+    Input: predictions (N, k) ndarray
+           targets (N, k) ndarray        
+    Returns: scalar
+    """
+    predictions = np.clip(predictions, epsilon, 1. - epsilon)
+    N = predictions.shape[0]
+    ce = -np.sum(targets*np.log(predictions+1e-9))/N
+    return ce
+
+predictions = np.array([[0.25,0.25,0.25,0.25],
+                        [0.01,0.01,0.01,0.96]])
+targets = np.array([[0,0,0,1],
+                   [0,0,0,1]])
+ans = 0.71355817782  #Correct answer
+x = cross_entropy(predictions, targets)
+print(np.isclose(x,ans))
 
 
 
@@ -72,3 +95,7 @@ predictions=qc.predict(X_train,initial_thetas)
 -Add another ansatz, cool one in lin 6 bookmark
 -try both ansatzes on breast cancer dataset
 """
+
+#Notes to self
+#Compute loss, the deriavtive in gradient descent or adam is computed by evaluate the cirquit twice pi/2,
+#Did I normalize the circuit between 0 and 2pi?

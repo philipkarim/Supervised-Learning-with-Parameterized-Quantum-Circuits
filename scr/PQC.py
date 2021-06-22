@@ -91,7 +91,7 @@ class QML:
             for block in range(blocks):
                 for rot_y in range(self.n_qubits):
                     if rot_y+4*block<self.n_parameters:
-                        self.qc_ansatz.ry(self.thetas[rot_y+4*block], self.data_register[rot_y])
+                        self.qc_ansatz.ry(2*np.pi*self.thetas[rot_y+4*block], self.data_register[rot_y])
                     if rot_y!=0:
                         for con_x in range(rot_y):
                             self.qc_ansatz.cx(self.data_register[con_x], self.data_register[rot_y])
