@@ -10,7 +10,6 @@ import matplotlib.pyplot as plt
 #Importing qiskit
 import qiskit as qk
 from qiskit.visualization import *
-from quantumnet import *
 
 from sklearn import datasets
 from sklearn.model_selection import train_test_split
@@ -18,7 +17,7 @@ from sklearn.preprocessing import scale, StandardScaler, MinMaxScaler
 
 #Import the parameterized quantum circuit class
 from PQC import QML
-
+from optimize_loss import optimize
 
 #Handling the data
 iris = datasets.load_iris()
@@ -49,60 +48,37 @@ X_test_scaled = scaler2.transform(X_test)
 #print(X_test)
 #print(X_test_scaled)
 
-#Training
-n_parameters=4
-qc=QML(0, X.shape[1],1,n_parameters, backend="qasm_simulator", shots=1024)
-
-#Initialisation of thetas
-initial_thetas = np.random.uniform(size=n_parameters)
-predictions=qc.predict(X_train,initial_thetas)
 
 #for pr in range(len(y_test)):
 #    print(predictions[pr],y_test[pr])
 
 
-def cross_entropy(preds, targets, classes=2, epsilon=1e-12):
-    """
-    Computes cross entropy between the true labels and the predictions
+
+def train(circuit, n_epochs, n_batch_size, initial_thetas,lr, X_train=X_train, y_train=y_train):
+    #Creating optimization object
+    optimizer=optimize(lr)
+    #Splits the dataset into batches
+    batches=len(X_train)//n_batch_size
+    #Adds another batch if it has a reminder
+    if len(X_train)%n_batch_size!=0:
+        batches+=1
+    #Reshapes the data
+    X_reshaped=np.reshape(X_train,(batches,n_batch_size,X_train.shape[1]))
+    print(X_reshaped)
+    print(X_reshaped[0])
+
+    #Train parameters
+    for epoch in range(n_epochs):
+        for batch in range(n_batch_size):
+            batch_pred=circuit.predict(X_reshaped[batch],initial_thetas)
+            #Add result to a main list of outputs
+            #Compute loss with the whole list after each epoch and add to list
+            
     
-    Args:
-        preds:   predictions as an array or list
-        targets: true labels as an array or list  
-    
-    Returns: loss as a scalar
-    """
-    #Creates matrixes to use one hot encoded labels
-    distribution_preds=np.zeros((len(preds), classes))
-    distribution_target=np.zeros((len(targets), classes))
+    optimized_params
 
-    #Just rewriting the predictions and labels
-    for i in range(len(preds)):
-        distribution_preds[i][0]=1-preds[i]
-        distribution_preds[i][1]=preds[i]
-        
-        if targets[i]==0:
-            distribution_target[i][0]=1
-        elif targets[i]==1:
-            distribution_target[i][1]=1
+    return optimized_params, train_loss
 
-    distribution_preds = np.clip(distribution_preds, epsilon, 1. - epsilon)
-    n_samples = len(preds)
-    ce = -np.sum(distribution_target*np.log(distribution_preds+1e-9))/n_samples
-    return ce
-
-"""
-predictions = np.array([[0.25,0.25,0.25,0.25],
-                        [0.01,0.01,0.01,0.96]])
-targets = np.array([[0,0,0,1],
-                   [0,0,0,1]])
-ans = 0.71355817782  #Correct answer
-x = cross_entropy(predictions, targets)
-print(np.isclose(x,ans))
-
-print(x)
-"""
-zz=cross_entropy(predictions, y_train)
-print(zz)
 #Next steps:
 """
 -Try training the thing
@@ -115,6 +91,12 @@ print(zz)
 -Maybe spread out the ansatz making it look better
 -Add another ansatz, cool one in lin 6 bookmark
 -try both ansatzes on breast cancer dataset
+-Try to use an entanglement encoder which is a cnot but on all cirquits in separate thing
+-Explore best epoch and batch size
+-Choose batch and epoch from test or train or validation set?
+-Normalized, so the largest output is 1 and smallest output is 0,
+therefor softmax or sigmoid is not nessecary.
+Appendix: derivative of gradient
 """
 
 #Notes to self
