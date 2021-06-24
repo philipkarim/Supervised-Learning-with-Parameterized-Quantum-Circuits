@@ -1,5 +1,6 @@
 #This import is just because of some duplicate of mpi or armadillo on the computer
 import os
+from types import coroutine
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
 #Importing packages 
@@ -56,23 +57,40 @@ qc=QML(0, X.shape[1],1,n_parameters, backend="qasm_simulator", shots=1024)
 initial_thetas = np.random.uniform(size=n_parameters)
 predictions=qc.predict(X_train,initial_thetas)
 
-for pr in range(len(y_test)):
-    print(predictions[pr],y_test[pr])
+#for pr in range(len(y_test)):
+#    print(predictions[pr],y_test[pr])
 
 
-def cross_entropy(predictions, targets, epsilon=1e-12):
+def cross_entropy(preds, targets, classes=2, epsilon=1e-12):
     """
-    Computes cross entropy between targets (encoded as one-hot vectors)
-    and predictions. 
-    Input: predictions (N, k) ndarray
-           targets (N, k) ndarray        
-    Returns: scalar
+    Computes cross entropy between the true labels and the predictions
+    
+    Args:
+        preds:   predictions as an array or list
+        targets: true labels as an array or list  
+    
+    Returns: loss as a scalar
     """
-    predictions = np.clip(predictions, epsilon, 1. - epsilon)
-    N = predictions.shape[0]
-    ce = -np.sum(targets*np.log(predictions+1e-9))/N
+    #Creates matrixes to use one hot encoded labels
+    distribution_preds=np.zeros((len(preds), classes))
+    distribution_target=np.zeros((len(targets), classes))
+
+    #Just rewriting the predictions and labels
+    for i in range(len(preds)):
+        distribution_preds[i][0]=1-preds[i]
+        distribution_preds[i][1]=preds[i]
+        
+        if targets[i]==0:
+            distribution_target[i][0]=1
+        elif targets[i]==1:
+            distribution_target[i][1]=1
+
+    distribution_preds = np.clip(distribution_preds, epsilon, 1. - epsilon)
+    n_samples = len(preds)
+    ce = -np.sum(distribution_target*np.log(distribution_preds+1e-9))/n_samples
     return ce
 
+"""
 predictions = np.array([[0.25,0.25,0.25,0.25],
                         [0.01,0.01,0.01,0.96]])
 targets = np.array([[0,0,0,1],
@@ -81,14 +99,17 @@ ans = 0.71355817782  #Correct answer
 x = cross_entropy(predictions, targets)
 print(np.isclose(x,ans))
 
-
-
+print(x)
+"""
+zz=cross_entropy(predictions, y_train)
+print(zz)
 #Next steps:
 """
 -Try training the thing
-    -Write loss function or find it in scikit
     -Write an optimizer, using adam or gd hopefully from Scikit
     -Need the derivative for this, use the parameter shift rule
+    -Explore with the batch size, batch size is how many samples 
+    that will be predicted before the gradient descent does one loop. 1 loop only? i think so
 -Try adding epochs and such to see how much the loss/accuracy is
 -Maybe try plotting as a function of parameters, and play with initialization params of theta
 -Maybe spread out the ansatz making it look better
