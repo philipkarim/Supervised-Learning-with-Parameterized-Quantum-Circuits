@@ -1,7 +1,7 @@
 import numpy as np
 
 class optimize:
-    def __init__(self, learning_rate):
+    def __init__(self, learning_rate, circuit):
         """
         This class is handling everything regarding optimizing the parameters 
         and loss
@@ -11,16 +11,15 @@ class optimize:
         """
 
         self.learning_rate=learning_rate
+        self.circuit=circuit
 
-    def gradient_descent(self, derivative, initial_value, learn_rate, n_iter):
-        thetas = initial_value
-        for _ in range(n_iter):
-            diff = -learn_rate * derivative(thetas)
-            thetas += diff
+    def gradient_descent(self, params, predicted, target, samples):
+        update=self.learning_rate *self.gradient_of_loss(params, predicted, target, samples)
+        print("s")
+        print(update)
+        params-= update
 
-            #alpha += lambda*energyDerivative
-
-        return thetas
+        return params
 
     def cross_entropy(self, preds, targets, classes=2, epsilon=1e-12):
         """
@@ -51,21 +50,20 @@ class optimize:
         loss = -np.sum(distribution_target*np.log(distribution_preds+1e-9))/n_samples
         return loss
 
-    def parameter_shift(self, circuit, sample, theta_array, theta_index):
+    def parameter_shift(self, sample, theta_array, theta_index):
         theta_left_shift=theta_array
         theta_right_shift=theta_array
         #Since the cirquits are normalised the shift is 0.25 which represents pi/2
         theta_right_shift[theta_index]+=0.25
         theta_left_shift[theta_index]-=0.25
-
-        pred_right_shift=circuit.predict(sample,theta_right_shift)
-        pred_left_shift=circuit.predict(sample,theta_left_shift)
+        pred_right_shift=self.circuit.predict(np.array([sample]),theta_right_shift)
+        pred_left_shift=self.circuit.predict(np.array([sample]),theta_left_shift)
 
         theta_grad=(pred_right_shift[0]-pred_left_shift[0])/2
 
         return theta_grad
 
-    def gradient_of_loss(self, predicted, target, samples, thetas):
+    def gradient_of_loss(self, thetas, predicted, target, samples):
         gradients=np.zeros(len(thetas))
 
         for thet in range(len(thetas)):
@@ -73,7 +71,9 @@ class optimize:
             for i in range(len(predicted)):
                 #Really unsure about this one, okay maybe not,
                 #this works i think
-                grad_theta=parameter_shift(samples[i], thetas, thet)
+                #print(samples[i], thetas, thet)
+                grad_theta=self.parameter_shift(samples[i], thetas, thet)
+                print(grad_theta)
                 deno=predicted[i]*(1-predicted[i])
                 sum+=grad_theta*abs(predicted[i]-target[i])/deno
             gradients[thet]=sum

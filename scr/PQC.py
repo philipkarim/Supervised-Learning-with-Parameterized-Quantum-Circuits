@@ -55,11 +55,13 @@ class QML:
         Returns:
             Encoding circuit containing the classical data as a quantum circuit
         """
-
         self.qc_enc = qk.QuantumCircuit(self.data_register, self.classical_register)
 
         for feature_idx in range(self.n_qubits):
             self.qc_enc.h(self.data_register[feature_idx])
+            #print(feature_idx)
+            #print(sample)
+            #print(self.data_register)
             self.qc_enc.rz(2*np.pi*sample[feature_idx],self.data_register[feature_idx])
         
         return self.qc_enc
@@ -120,7 +122,6 @@ class QML:
 
         self.make_encoder_cir(sample)
         self.make_param_cir(parameters)
-
         self.qc_enc.compose(self.qc_ansatz, front=False, inplace=True)
         self.qc_enc.measure(self.data_register[-1],self.classical_register[0])
 
@@ -131,12 +132,15 @@ class QML:
     def predict(self, designX, params):
         #Splits up the design matrix
         predictions_array=np.zeros(designX.shape[0])
+        predictions_list=[]
+
+        #print(designX.shape[0])
 
         for samp in range(designX.shape[0]):
             self.create_qcircuit(designX[samp], params)
-            predictions_array[samp]=self.run()
-
-        return predictions_array
+            #predictions_array[samp]=self.run()
+            predictions_list.append(self.run())
+        return predictions_list
     
     def run(self):
         job = qk.execute(self.qc_enc,
