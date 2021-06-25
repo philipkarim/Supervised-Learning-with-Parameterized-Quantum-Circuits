@@ -84,9 +84,9 @@ def train(circuit, n_epochs, n_batch_size, initial_thetas,lr, X_tr, y_tr, X_te, 
             theta_params=optimizer.gradient_descent(theta_params, batch_pred, y_tr[batch:batch+n_batch_size], X_reshaped[batch])
         
         #Computes loss and predicts on the test set with the new parameters
-        train_loss=optimizer.cross_entropy(temp_list,y_tr)
+        train_loss=optimizer.binary_cross_entropy(temp_list,y_tr)
         test_pred=circuit.predict(X_te,theta_params)
-        test_loss=optimizer.cross_entropy(test_pred,y_te)
+        test_loss=optimizer.binary_cross_entropy(test_pred,y_te)
         
         #Tresholding the probabillities into hard label predictions
         temp_list=hard_labels(temp_list, 0.5)
@@ -109,10 +109,12 @@ def train(circuit, n_epochs, n_batch_size, initial_thetas,lr, X_tr, y_tr, X_te, 
 
     return theta_params, prediction_epochs_train, loss_train, accuracy_train
 
-n_params=10
-learning_rate=0.05
+n_params=8
+learning_rate=0.1
 batch_size=1
-init_params=np.random.uniform(0,0.1,size=n_params)
+init_params=np.random.uniform(0.25,0.75,size=n_params)
+#init_params=np.arange(n_params)
+
 epochs=50
 qc=QML(0,X.shape[1], 1, n_params, backend="qasm_simulator", shots=1024)
 

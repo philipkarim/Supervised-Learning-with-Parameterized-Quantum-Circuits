@@ -19,3 +19,6 @@ def hard_labels(y_array, treshold):
         y_array[i]=np.where(y_array[i]>treshold, 1, 0)
     
     return y_array
+
+def sigmoid(x):
+    return 1 / (1 + np.exp(-x))

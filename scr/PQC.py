@@ -1,6 +1,6 @@
 import qiskit as qk
 import numpy as np
-
+from utils import sigmoid
 
 class QML:
     def __init__(self, ansatz, n_qubits, n_cbits, n_parameters, backend="qasm_simulator", shots=1024):
@@ -8,7 +8,21 @@ class QML:
         Class that creates a parameterized quantum circuit
 
         Args:
-            ansatz: 0=ry along all qubits, in addition to cx between all gates as follows:
+            ansatz: 0=ry along all qubits, in addition to cx between pairwise gates as follows:
+                          ┌───────┐      ┌────────┐                      ┌─────────┐     
+                    q0_0: ┤ RY(0) ├───■──┤ RY(8π) ├────────────────■─────┤ RY(16π) ├──■──
+                          ├───────┴┐┌─┴─┐└────────┘┌─────────┐   ┌─┴─┐   ├─────────┤  │  
+                    q0_1: ┤ RY(2π) ├┤ X ├────■─────┤ RY(10π) ├───┤ X ├───┤ RY(18π) ├──■──
+                          ├────────┤└───┘  ┌─┴─┐   └─────────┘┌──┴───┴──┐└─────────┘  │  
+                    q0_2: ┤ RY(4π) ├───────┤ X ├────────■─────┤ RY(12π) ├─────────────■──
+                          ├────────┤       └───┘      ┌─┴─┐   ├─────────┤           ┌─┴─┐
+                    q0_3: ┤ RY(6π) ├──────────────────┤ X ├───┤ RY(14π) ├───────────┤ X ├
+                          └────────┘                  └───┘   └─────────┘           └───┘
+                    c0: 1/═══════════════════════════════════════════════════════════════
+
+
+
+            ansatz: 1=ry along all qubits, in addition to cx between all gates as follows:
                            ┌────────────┐
                     q0_0: ─┤ RY(\theta0)├───■────■─────────■────────────
                            ├────────────┤ ┌─┴─┐  │         │
@@ -89,17 +103,33 @@ class QML:
                 blocks=ansatz_parts+1
             else:
                 blocks=ansatz_parts
+            
+            #Controlled and counting each x gate to stop when appropriate?
+            #controlled_x=
 
+            tot_gates=0
             for block in range(blocks):
                 for rot_y in range(self.n_qubits):
                     if rot_y+self.n_qubits*block<self.n_parameters:
                         self.qc_ansatz.ry(2*np.pi*self.thetas[rot_y+self.n_qubits*block], self.data_register[rot_y])
-                    if rot_y!=0:
-                        if ansatz_parts
-                        #for con_x in range(rot_y):
+                        tot_gates+=1
+                    if rot_y!=0 and tot_gates<   len(self.thetas)-reminder_gates-1:
                         self.qc_ansatz.cx(self.data_register[rot_y-1], self.data_register[rot_y])
-            print(self.qc_ansatz)
-            quit()
+            
+            #Entangling the qubits before measuring
+            """
+            self.ansatz.controlx()
+            qc = QuantumCircuit(qr)
+            c3X_gate = qk.XGate().control(3)
+            self.qc_ansatz.c3X_gate(self.data_register[4])
+            """
+            from qiskit.circuit.library.standard_gates import XGate
+
+            c3h_gate = XGate().control(3)
+            self.qc_ansatz.append(c3h_gate, self.data_register)
+
+            #print(self.qc_ansatz)       
+
         elif self.ansatz==1:
             #Creating the ansatz circuit:
             if reminder_gates!=0:
@@ -115,9 +145,9 @@ class QML:
                         for con_x in range(rot_y):
                             self.qc_ansatz.cx(self.data_register[con_x], self.data_register[rot_y])
 
-            else:
-                print("Chosen ansatz, is not available, set ansatz to 0 or 1.\n Terminating program")
-                quit()
+        else:
+            print("Chosen ansatz, is not available, set ansatz to 0 or 1.\n Terminating program")
+            quit()
             """
             #Copies the ansatz multiple times to ensure that the wanted number of parameters is used:
             if ansatz_parts>1:
@@ -148,7 +178,7 @@ class QML:
         #print(self.qc_enc)
 
         return self.qc_enc
-    
+
     def predict(self, designX, params):
         #Splits up the design matrix
         #predictions_array=np.zeros(designX.shape[0])
@@ -159,7 +189,8 @@ class QML:
         for samp in range(designX.shape[0]):
             self.create_qcircuit(designX[samp], params)
             #predictions_array[samp]=self.run()
-            predictions_list.append(self.run())
+            predictions_list.append(sigmoid(self.run()))
+        
         return predictions_list
     
     def run(self):

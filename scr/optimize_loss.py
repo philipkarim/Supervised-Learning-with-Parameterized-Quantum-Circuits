@@ -48,6 +48,29 @@ class optimize:
         loss = -np.sum(distribution_target*np.log(distribution_preds+1e-9))/n_samples
         return loss
 
+    def binary_cross_entropy(self, preds, targets, classes=2, epsilon=1e-12):
+        """
+        Computes cross entropy between the true labels and the predictions
+        
+        Args:
+            preds:   predictions as an array or list
+            targets: true labels as an array or list  
+        
+        Returns: loss as a scalar
+        """
+        sum=0
+        n_samples=len(preds)
+        for index in range(n_samples):
+            sum+=targets[index]*np.log(preds[index])+(1-targets[index])*np.log(1-preds[index])
+
+        return -sum/n_samples
+
+
+        distribution_preds = np.clip(distribution_preds, epsilon, 1. - epsilon)
+        n_samples = len(preds)
+        loss = -np.sum(distribution_target*np.log(distribution_preds+1e-9))/n_samples
+        return loss
+
     def parameter_shift(self, sample, theta_array, theta_index):
         theta_left_shift=theta_array.copy()
         theta_right_shift=theta_array.copy()
@@ -79,7 +102,7 @@ class optimize:
 
     def gradient_of_loss(self, thetas, predicted, target, samples):
         gradients=np.zeros(len(thetas))
-        
+        eps=1E-8
         for thet in range(len(thetas)):
             sum=0
             for i in range(len(predicted)):
@@ -89,7 +112,7 @@ class optimize:
                 grad_theta=self.parameter_shift(samples[i], thetas, thet)
                 #print(thet, grad_theta)
                 #print(grad_theta)
-                deno=predicted[i]*(1-predicted[i])
+                deno=(predicted[i]+eps)*(1-predicted[i]-eps)
                 sum+=grad_theta*abs(predicted[i]-target[i])/deno
             gradients[thet]=sum
         
