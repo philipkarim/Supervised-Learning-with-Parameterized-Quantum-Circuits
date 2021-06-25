@@ -1,6 +1,7 @@
 import qiskit as qk
 import numpy as np
 from utils import sigmoid
+from qiskit.circuit.library.standard_gates import XGate
 
 class QML:
     def __init__(self, ansatz, n_qubits, n_cbits, n_parameters, backend="qasm_simulator", shots=1024):
@@ -123,7 +124,6 @@ class QML:
             c3X_gate = qk.XGate().control(3)
             self.qc_ansatz.c3X_gate(self.data_register[4])
             """
-            from qiskit.circuit.library.standard_gates import XGate
 
             c3h_gate = XGate().control(3)
             self.qc_ansatz.append(c3h_gate, self.data_register)

@@ -15,7 +15,8 @@ class optimize:
 
     def gradient_descent(self, params, predicted, target, samples):
         update=self.learning_rate *self.gradient_of_loss(params, predicted, target, samples)
-        params-= update
+        #print(update)
+        params+= update
 
         return params
 
@@ -50,7 +51,7 @@ class optimize:
 
     def binary_cross_entropy(self, preds, targets, classes=2, epsilon=1e-12):
         """
-        Computes cross entropy between the true labels and the predictions
+        Computes binary cross entropy between the true labels and the predictions
         
         Args:
             preds:   predictions as an array or list
@@ -110,6 +111,7 @@ class optimize:
                 #this works i think
                 #print(samples[i], thetas, thet)
                 grad_theta=self.parameter_shift(samples[i], thetas, thet)
+                #print(grad_theta)
                 #print(thet, grad_theta)
                 #print(grad_theta)
                 deno=(predicted[i]+eps)*(1-predicted[i]-eps)

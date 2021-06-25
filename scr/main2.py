@@ -107,10 +107,10 @@ def train(circuit, n_epochs, n_batch_size, initial_thetas,lr, X_tr, y_tr, X_te, 
 
         temp_list.clear()
 
-    return theta_params, prediction_epochs_train, loss_train, accuracy_train
+    return loss_train, accuracy_train, loss_test, accuracy_test
 
 n_params=8
-learning_rate=0.1
+learning_rate=1.0
 batch_size=1
 init_params=np.random.uniform(0.25,0.75,size=n_params)
 #init_params=np.arange(n_params)
@@ -120,9 +120,13 @@ qc=QML(0,X.shape[1], 1, n_params, backend="qasm_simulator", shots=1024)
 
 #Shuffle the data, print by accuracy score
 
-test_parameters, train_predictions, train_loss, train_accuracy=train(qc, epochs, batch_size, 
+train_loss, train_accuracy, test_loss, test_accuracy =train(qc, epochs, batch_size, 
                                                             init_params, learning_rate, X_tr=X_train,
                                                             y_tr=y_train, X_te=X_test,y_te=y_test)
+
+
+#Analyze results
+
 
 
 #Next steps:
