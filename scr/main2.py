@@ -130,19 +130,28 @@ def test(circuit, n_epochs, n_batch_size, initial_thetas,lr, X_train=X_train, y_
     loss_train=[]
     accuracy_train=[]
 
+    prediction_epochs_test=[]
+    loss_test=[]
+    accuracy_test=[]
+
     temp_list=[]
     #Train parameters
     for epoch in range(n_epochs):
-        print(f"Epoch:{epoch}")
+        #print(f"Epoch:{epoch}")
         for batch in range(batches):
-            print(f"Batch:{batch}")
+            #print(f"Batch:{batch}")
             batch_pred=circuit.predict(X_reshaped[batch],theta_params)
             temp_list+=batch_pred
             theta_params=optimizer.gradient_descent(theta_params, batch_pred, y_train[batch:batch+n_batch_size], X_reshaped[batch])
-            print("d")
-            print(theta_params)
-            print("d")
+            #print("d")
+            #print(theta_params)
+            #print("d")
+        train_loss=optimizer.cross_entropy(temp_list,y_train)
+        loss_train.append(train_loss)
+        print(f"Epoch: {epoch}, loss:{train_loss}")
+
         prediction_epochs_train.append(temp_list)
+
         temp_list.clear()
 
     
@@ -172,6 +181,10 @@ therefor softmax or sigmoid is not nessecary.
 -Remember to seed the initialization theta
 -Some dead neurons, test with it
 -For each computed training epoch, use the same parameters on testing? for each batch even?
+
+Mean training loss of all batches for a specific epoch
+Then use the same output parameters on the test set
+
 
 Reoport:
 error and accuracy vs batch size
