@@ -92,12 +92,32 @@ class QML:
 
             for block in range(blocks):
                 for rot_y in range(self.n_qubits):
-                    if rot_y+4*block<self.n_parameters:
+                    if rot_y+self.n_qubits*block<self.n_parameters:
+                        self.qc_ansatz.ry(2*np.pi*self.thetas[rot_y+self.n_qubits*block], self.data_register[rot_y])
+                    if rot_y!=0:
+                        if ansatz_parts
+                        #for con_x in range(rot_y):
+                        self.qc_ansatz.cx(self.data_register[rot_y-1], self.data_register[rot_y])
+            print(self.qc_ansatz)
+            quit()
+        elif self.ansatz==1:
+            #Creating the ansatz circuit:
+            if reminder_gates!=0:
+                blocks=ansatz_parts+1
+            else:
+                blocks=ansatz_parts
+
+            for block in range(blocks):
+                for rot_y in range(self.n_qubits):
+                    if rot_y+self.n_qubits*block<self.n_parameters:
                         self.qc_ansatz.ry(2*np.pi*self.thetas[rot_y+4*block], self.data_register[rot_y])
                     if rot_y!=0:
                         for con_x in range(rot_y):
                             self.qc_ansatz.cx(self.data_register[con_x], self.data_register[rot_y])
 
+            else:
+                print("Chosen ansatz, is not available, set ansatz to 0 or 1.\n Terminating program")
+                quit()
             """
             #Copies the ansatz multiple times to ensure that the wanted number of parameters is used:
             if ansatz_parts>1:
@@ -131,7 +151,7 @@ class QML:
     
     def predict(self, designX, params):
         #Splits up the design matrix
-        predictions_array=np.zeros(designX.shape[0])
+        #predictions_array=np.zeros(designX.shape[0])
         predictions_list=[]
 
         #print(designX.shape[0])
