@@ -86,6 +86,7 @@ init_params=np.random.normal(0.,0.01,size=n_params)
 ansatz=0
 epochs=50
 qc=QML(ansatz,X.shape[1], 1, n_params, backend="qasm_simulator", shots=1024)
+qc_2=QML(1,X.shape[1], 1, n_params, backend="qasm_simulator", shots=1024)
 
 #Choose type of investigation, if all parameters are chosen prehand, set both to false
 regular_run=False
@@ -186,6 +187,34 @@ def investigate_distribution(type, folder_name):
     
     return
 
+def investigate_lr_params(folder_name, folder_name2, lr_list, n_params_list):
+    """
+    Function that investigate the best learning rate and learning rate
+    
+    Needs to be ran at an unix system bases computer due to the fork commands
+
+    args: 
+            folder_name:    place of saving the folder
+            lr_list:        list of learning rates
+            n_params_list:  list of number of parameters to run 
+    """
+    pid = os.fork()
+    if pid:
+        for i in lr_list:
+            for j in n_params_list:
+                train_loss, train_accuracy, test_loss, test_accuracy=train(qc, epochs, batch_size, np.random.normal(0.,0.01,size=j), i, X_tr=X_train,y_tr=y_train, X_te=X_test,y_te=y_test)
+                np.save(data_path(folder_name, "lr_params/train_lr"+str(i)+"_n"+str(j)+".npy"), np.array(train_loss))
+                np.save(data_path(folder_name, "lr_params/test_lr"+str(i)+"_n"+str(j)+".npy"), np.array(test_loss))
+
+    else:
+        for ii in lr_list:
+            for jj in n_params_list:
+                train_loss, train_accuracy, test_loss, test_accuracy=train(qc_2, epochs, batch_size, np.random.normal(0.,0.01,size=jj), ii, X_tr=X_train,y_tr=y_train, X_te=X_test,y_te=y_test)
+                np.save(data_path(folder_name2, "lr_params/train_lr"+str(ii)+"_n"+str(jj)+".npy"), np.array(train_loss))
+                np.save(data_path(folder_name2, "lr_params/test_lr"+str(ii)+"_n"+str(jj)+".npy"), np.array(test_loss))
+    
+    return
+
 
 if ansatz==0:
     folder="ansatz_0/"
@@ -199,7 +228,16 @@ if inspect_distribution==True:
     file_folder=data_path(path,folder)
     investigate_distribution("N", file_folder)
 
-if regular_run==True:
+elif inspect_lr_param==True:
+    file_folder2=data_path(path,"ansatz_1/")
+    #Learning rates and number of paraeters to investigate
+    lrs=[0.1, 0.01, 0.001, 0.0001]
+    n_par=[4, 8, 12, 16, 20, 24]
+    lrs=[0.1]
+    n_par=[4]
+    investigate_lr_params(file_folder, file_folder2, lrs, n_par)
+
+elif regular_run==True:
     train_loss, train_accuracy, test_loss, test_accuracy =train(qc, epochs, batch_size, 
                                                             init_params, learning_rate, X_tr=X_train,
                                                             y_tr=y_train, X_te=X_test,y_te=y_test)
