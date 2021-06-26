@@ -1,9 +1,10 @@
 #This import is just because of some duplicate of mpi or armadillo on the computer
 import os
-from types import coroutine
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
-
 #Importing packages 
+
+from types import coroutine
+
 import numpy as np
 import matplotlib.pyplot as plt
 import random
@@ -40,8 +41,18 @@ if dataset=="iris":
     X = X[idx,:]
     X=np.squeeze(X, axis=0)
     y = y[idx]
+    import collections
+    dirname=collections
+    #dirname=os.path.dirname()
+    #print(dirname)
     path="Results/saved_data/iris/"
-
+    """
+    xx=np.array([1,1,2])
+    np.save("sample.npy", xx)
+    print(np.load("sample.npy"))
+    np.save("Results/saved_arrays/test.npy", xx)
+    print(path)
+    """
 
 elif dataset=="breastcancer":
     data = load_breast_cancer()
@@ -68,7 +79,7 @@ X_test = scaler2.transform(X_test)
 
 #Set parameters
 #Use: 10,0.1,1,0.01
-n_params=4
+n_params=10
 learning_rate=0.01
 batch_size=1
 init_params=np.random.normal(0.,0.01,size=n_params)
@@ -153,25 +164,25 @@ def investigate_distribution(type, folder_name):
     pid = os.fork()
     if pid:
         train_loss, train_accuracy, test_loss, test_accuracy=train(qc, epochs, batch_size, getDistribution("U", 0.01, n_params), learning_rate, X_tr=X_train,y_tr=y_train, X_te=X_test,y_te=y_test)
-        np.save(data_path(folder_name, "train"+type+str(0.01)+".npy"), np.array(train_loss))
-        np.save(data_path(folder_name, "test"+type+str(0.01)+".npy"), np.array(test_loss))
+        np.save(data_path(folder_name, "train"+type+"0_01.npy"), np.array(train_loss))
+        np.save(data_path(folder_name, "test"+type+"0_01.npy"), np.array(test_loss))
 
     else:
         pid1 = os.fork()
         if pid1:
             train_loss, train_accuracy, test_loss, test_accuracy=train(qc, epochs, batch_size, getDistribution("U", 0.1, n_params), learning_rate, X_tr=X_train,y_tr=y_train, X_te=X_test,y_te=y_test)
-            np.save(data_path(folder_name, "train"+type+str(0.1)+".npy"), np.array(train_loss))
-            np.save(data_path(folder_name, "test"+type+str(0.1)+".npy"), np.array(test_loss))
+            np.save(data_path(folder_name, "train"+type+"0_1.npy"), np.array(train_loss))
+            np.save(data_path(folder_name, "test"+type+"0_1.npy"), np.array(test_loss))
         else:
             pid2=os.fork()
             if pid2:
                 train_loss, train_accuracy, test_loss, test_accuracy=train(qc, epochs, batch_size, getDistribution("U", 0.25, n_params), learning_rate, X_tr=X_train,y_tr=y_train, X_te=X_test,y_te=y_test)
-                np.save(data_path(folder_name, "train"+type+str(0.25)+".npy"), np.array(train_loss))
-                np.save(data_path(folder_name, "test"+type+str(0.25)+".npy"), np.array(test_loss))            
+                np.save(data_path(folder_name, "train"+type+"0_25.npy"), np.array(train_loss))
+                np.save(data_path(folder_name, "test"+type+"0_25.npy"), np.array(test_loss))            
             else:
                 train_loss, train_accuracy, test_loss, test_accuracy=train(qc, epochs, batch_size, getDistribution("U", 0.001, n_params), learning_rate, X_tr=X_train,y_tr=y_train, X_te=X_test,y_te=y_test)
-                np.save(data_path(folder_name, "train"+type+str(0.001)+".npy"), np.array(train_loss))
-                np.save(data_path(folder_name, "test"+type+str(0.001)+".npy"), np.array(test_loss))
+                np.save(data_path(folder_name, "train"+type+"0_001.npy"), np.array(train_loss))
+                np.save(data_path(folder_name, "test"+type+"0_001.npy"), np.array(test_loss))
     
     return
 
@@ -186,7 +197,7 @@ file_folder=data_path(path,folder)
 
 if inspect_distribution==True:
     file_folder=data_path(path,folder)
-    investigate_distribution("U")
+    investigate_distribution("U", file_folder)
 
 if regular_run==True:
     train_loss, train_accuracy, test_loss, test_accuracy =train(qc, epochs, batch_size, 

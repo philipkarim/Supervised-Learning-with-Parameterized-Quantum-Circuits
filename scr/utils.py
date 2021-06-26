@@ -36,7 +36,7 @@ def getDistribution(type, stop, n):
     elif type=="N":
         return np.random.normal(stop/2,stop,size=n)
     else:
-        print("Choose U for uniform distribution or N for normal distribution. \n Shutting down"))
+        print("Choose U for uniform distribution or N for normal distribution. \n Shutting down")
         quit()
 
 def data_path(DATA_ID, dat_id):
