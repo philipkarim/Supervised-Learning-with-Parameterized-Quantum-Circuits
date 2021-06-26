@@ -66,6 +66,21 @@ scaler2.fit(X_train)
 X_train = scaler2.transform(X_train)
 X_test = scaler2.transform(X_test)
 
+#Set parameters
+#Use: 10,0.1,1,0.01
+n_params=4
+learning_rate=0.01
+batch_size=1
+init_params=np.random.normal(0.,0.01,size=n_params)
+ansatz=0
+epochs=50
+qc=QML(ansatz,X.shape[1], 1, n_params, backend="qasm_simulator", shots=1024)
+
+#Choose type of investigation, if all parameters are chosen prehand, set both to false
+regular_run=False
+inspect_distribution=True
+inspect_lr_param=False
+
 def train(circuit, n_epochs, n_batch_size, initial_thetas,lr, X_tr, y_tr, X_te, y_te):
     #Creating optimization object
     optimizer=optimize(lr, circuit)
@@ -124,82 +139,64 @@ def train(circuit, n_epochs, n_batch_size, initial_thetas,lr, X_tr, y_tr, X_te, 
 
     return loss_train, accuracy_train, loss_test, accuracy_test
 
-#Use: 10,0.1,1,0.01
-n_params=10
-learning_rate=0.01
-batch_size=1
-init_params=np.random.normal(0.,0.01,size=n_params)
-ansatz=0
-epochs=50
-qc=QML(ansatz,X.shape[1], 1, n_params, backend="qasm_simulator", shots=1024)
-"""
-X_train=np.array([X_train[0]])
-y_train=np.array([y_train[0]])
-X_test=np.array([X_test[0]])
-y_test=np.array([y_test[0]])
-print(X_train,y_train)
-"""
-def investigate_distribution():
+
+def investigate_distribution(type, folder_name):
     """
     Function that investigate the best initialisation of the varational parameters
     and also tests if uniform- or normal distribution is best
     
-    Needs 8 cores to run this due to the paralellization
+    Needs to be ran at an unix system bases computer due to the fork commands
+
+    args: 
+            type: "U" or "N" for uniform or normal
     """
     pid = os.fork()
-  
-    # pid greater than 0 represents
-    # the parent process 
-    if pid > 0 :
-        print("I am parent process:")
-        print("Process ID:", os.getpid())
-        print("Child's process ID:", pid)
-    
-    # pid equal to 0 represnts
-    # the created child process
-    else :
-        print("\nI am child process:")
-        print("Process ID:", os.getpid())
-        print("Parent's process ID:", os.getppid())
+    if pid:
+        train_loss, train_accuracy, test_loss, test_accuracy=train(qc, epochs, batch_size, getDistribution("U", 0.01, n_params), learning_rate, X_tr=X_train,y_tr=y_train, X_te=X_test,y_te=y_test)
+        np.save(data_path(folder_name, "train"+type+str(0.01)+".npy"), np.array(train_loss))
+        np.save(data_path(folder_name, "test"+type+str(0.01)+".npy"), np.array(test_loss))
 
-    for job in range(4):
-        child = os.fork()
-        if child:
-            print(job)
-
-    #train_loss, train_accuracy, test_loss, test_accuracy =train(qc, epochs, batch_size, 
-     #                                                       init_params, learning_rate, X_tr=X_train,
-      #                                                      y_tr=y_train, X_te=X_test,y_te=y_test)
-    
+    else:
+        pid1 = os.fork()
+        if pid1:
+            train_loss, train_accuracy, test_loss, test_accuracy=train(qc, epochs, batch_size, getDistribution("U", 0.1, n_params), learning_rate, X_tr=X_train,y_tr=y_train, X_te=X_test,y_te=y_test)
+            np.save(data_path(folder_name, "train"+type+str(0.1)+".npy"), np.array(train_loss))
+            np.save(data_path(folder_name, "test"+type+str(0.1)+".npy"), np.array(test_loss))
+        else:
+            pid2=os.fork()
+            if pid2:
+                train_loss, train_accuracy, test_loss, test_accuracy=train(qc, epochs, batch_size, getDistribution("U", 0.25, n_params), learning_rate, X_tr=X_train,y_tr=y_train, X_te=X_test,y_te=y_test)
+                np.save(data_path(folder_name, "train"+type+str(0.25)+".npy"), np.array(train_loss))
+                np.save(data_path(folder_name, "test"+type+str(0.25)+".npy"), np.array(test_loss))            
+            else:
+                train_loss, train_accuracy, test_loss, test_accuracy=train(qc, epochs, batch_size, getDistribution("U", 0.001, n_params), learning_rate, X_tr=X_train,y_tr=y_train, X_te=X_test,y_te=y_test)
+                np.save(data_path(folder_name, "train"+type+str(0.001)+".npy"), np.array(train_loss))
+                np.save(data_path(folder_name, "test"+type+str(0.001)+".npy"), np.array(test_loss))
     
     return
-investigate_distribution()
 
-"""
-train_loss, train_accuracy, test_loss, test_accuracy =train(qc, epochs, batch_size, 
-                                                            init_params, learning_rate, X_tr=X_train,
-                                                            y_tr=y_train, X_te=X_test,y_te=y_test)
-"""
-
-#Saving the results:
-
-inspect_distribution=False
-inspect_lr_param=False
-
-"""
-os.join
 
 if ansatz==0:
     folder="ansatz_0/"
 else:
     folder="ansatz_1/"
-if 
+
 
 file_folder=data_path(path,folder)
 
-np.save(saved_path, x)
-np.save('trainlosses.npy', np.array(trainlosses))
-"""
+if inspect_distribution==True:
+    file_folder=data_path(path,folder)
+    investigate_distribution("U")
+
+if regular_run==True:
+    train_loss, train_accuracy, test_loss, test_accuracy =train(qc, epochs, batch_size, 
+                                                            init_params, learning_rate, X_tr=X_train,
+                                                            y_tr=y_train, X_te=X_test,y_te=y_test)
+
+
+
+#np.save('trainlosses.npy', np.array(trainlosses))
+
 
 
 

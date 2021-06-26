@@ -3,6 +3,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import os
+import random
+
+random.seed(2021)
 
 def accuracy_score(y, y_pred):
     """
@@ -26,6 +29,15 @@ def hard_labels(y_array, treshold):
 
 def sigmoid(x):
     return 1 / (1 + np.exp(-x))
+
+def getDistribution(type, stop, n):
+    if type=="U":
+        return np.random.uniform(0.,stop,size=n)
+    elif type=="N":
+        return np.random.normal(stop/2,stop,size=n)
+    else:
+        print("Choose U for uniform distribution or N for normal distribution. \n Shutting down"))
+        quit()
 
 def data_path(DATA_ID, dat_id):
     return os.path.join(DATA_ID, dat_id)
