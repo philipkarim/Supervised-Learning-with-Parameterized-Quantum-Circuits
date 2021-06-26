@@ -40,12 +40,17 @@ if dataset=="iris":
     X = X[idx,:]
     X=np.squeeze(X, axis=0)
     y = y[idx]
+    path="Results/saved_data/iris/"
+
 
 elif dataset=="breastcancer":
     data = load_breast_cancer()
     X = data.data #features
     y = data.target #targets
+
+    #Uses the first four feutures
     X=np.delete(X, np.s_[4:len(X[0])], axis=1) 
+    path="Results/saved_data/breastcancer/"
 
 else:
     print("No datset chosen\nClosing the program")
@@ -120,13 +125,13 @@ def train(circuit, n_epochs, n_batch_size, initial_thetas,lr, X_tr, y_tr, X_te, 
     return loss_train, accuracy_train, loss_test, accuracy_test
 
 #Use: 10,0.1,1,0.01
-n_params=20
+n_params=10
 learning_rate=0.01
 batch_size=1
-init_params=np.random.uniform(0.,0.01,size=n_params)
-
+init_params=np.random.normal(0.,0.01,size=n_params)
+ansatz=0
 epochs=50
-qc=QML(0,X.shape[1], 1, n_params, backend="qasm_simulator", shots=1024)
+qc=QML(ansatz,X.shape[1], 1, n_params, backend="qasm_simulator", shots=1024)
 """
 X_train=np.array([X_train[0]])
 y_train=np.array([y_train[0]])
@@ -134,16 +139,64 @@ X_test=np.array([X_test[0]])
 y_test=np.array([y_test[0]])
 print(X_train,y_train)
 """
+def investigate_distribution():
+    """
+    Function that investigate the best initialisation of the varational parameters
+    and also tests if uniform- or normal distribution is best
+    
+    Needs 8 cores to run this due to the paralellization
+    """
+    pid = os.fork()
+  
+    # pid greater than 0 represents
+    # the parent process 
+    if pid > 0 :
+        print("I am parent process:")
+        print("Process ID:", os.getpid())
+        print("Child's process ID:", pid)
+    
+    # pid equal to 0 represnts
+    # the created child process
+    else :
+        print("\nI am child process:")
+        print("Process ID:", os.getpid())
+        print("Parent's process ID:", os.getppid())
+    
+    #train_loss, train_accuracy, test_loss, test_accuracy =train(qc, epochs, batch_size, 
+     #                                                       init_params, learning_rate, X_tr=X_train,
+      #                                                      y_tr=y_train, X_te=X_test,y_te=y_test)
+    
+    
+    return
+investigate_distribution()
 
+"""
 train_loss, train_accuracy, test_loss, test_accuracy =train(qc, epochs, batch_size, 
                                                             init_params, learning_rate, X_tr=X_train,
                                                             y_tr=y_train, X_te=X_test,y_te=y_test)
+"""
 
 #Saving the results:
+
+inspect_distribution=False
+inspect_lr_param=False
+
+"""
 os.join
-saved_path="Results/saved_arrays/"
+
+if ansatz==0:
+    folder="ansatz_0/"
+else:
+    folder="ansatz_1/"
+if 
+
+file_folder=data_path(path,folder)
+
 np.save(saved_path, x)
 np.save('trainlosses.npy', np.array(trainlosses))
+"""
+
+
 
 #Analyze results
 
@@ -200,7 +253,3 @@ accuracy as a function of parameters with different learning rates
 
 Appendix: derivative of gradient
 """
-
-#Notes to self
-#Compute loss, the deriavtive in gradient descent or adam is computed by evaluate the cirquit twice pi/2,
-#Did I normalize the circuit between 0 and 2pi?

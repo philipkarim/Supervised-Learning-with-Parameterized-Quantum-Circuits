@@ -2,6 +2,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+import os
 
 def accuracy_score(y, y_pred):
     """
@@ -26,7 +27,8 @@ def hard_labels(y_array, treshold):
 def sigmoid(x):
     return 1 / (1 + np.exp(-x))
 
-
+def data_path(DATA_ID, dat_id):
+    return os.path.join(DATA_ID, dat_id)
 
 sns.set_style("darkgrid")
 
