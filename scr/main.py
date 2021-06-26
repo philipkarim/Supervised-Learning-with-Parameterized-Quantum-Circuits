@@ -1,173 +1,206 @@
 #This import is just because of some duplicate of mpi or armadillo on the computer
 import os
+from types import coroutine
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
 #Importing packages 
 import numpy as np
 import matplotlib.pyplot as plt
-
-#Importing pytorch packages
-import torch
-from torchvision import datasets, transforms
-import torch.optim as optim
-import torch.nn.functional as F
+import random
 
 #Importing qiskit
-import qiskit
+import qiskit as qk
 from qiskit.visualization import *
-from quantumnet import *
 
-#Just testing the circuit
-simulator = qiskit.Aer.get_backend('qasm_simulator')
-circuit = QuantumCircuit(1, simulator, 100)
-#print('Expected value for rotation pi {}'.format(circuit.run([np.pi])[0]))
-#print(circuit.QCircuit)
+from sklearn import datasets
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import scale, StandardScaler, MinMaxScaler
+from sklearn.utils import shuffle
+from sklearn.datasets import load_breast_cancer
 
+#Import the parameterized quantum circuit class
+from PQC import QML
+from optimize_loss import optimize
+from utils import *
 
-#Preparing the data
-n_samples_train = 100
-n_samples_test =50
+#Seeding the program
+random.seed(2021)
 
-X_train = datasets.MNIST(root='./data', train=True, download=True,transform=transforms.Compose([transforms.ToTensor()]))
-X_test = datasets.MNIST(root='./data', train=False, download=True,transform=transforms.Compose([transforms.ToTensor()]))
+#Handling the data
+#Choose a datset
+dataset="iris"
+#dataset="breastcancer"
 
+if dataset=="iris":
+    iris = datasets.load_iris()
+    X = iris.data
+    y = iris.target
+    idx = np.where(y < 2) # we only take the first two targets.
 
-# Want to deal with the numbers 1 and 7 
-idx_train = np.append(np.where(X_train.targets == 0)[0][:n_samples_train], np.where(X_train.targets == 1)[0][:n_samples_train])
-idx_test = np.append(np.where(X_test.targets == 0)[0][:n_samples_test], np.where(X_test.targets == 1)[0][:n_samples_test])
+    X = X[idx,:]
+    X=np.squeeze(X, axis=0)
+    y = y[idx]
 
-#Setting the 1's and 7's as train and test data
-X_train.data = X_train.data[idx_train]
-X_train.targets = X_train.targets[idx_train]
-X_test.data = X_test.data[idx_test]
-X_test.targets = X_test.targets[idx_test]
+elif dataset=="breastcancer":
+    data = load_breast_cancer()
+    X = data.data #features
+    y = data.target #targets
+    X=np.delete(X, np.s_[4:len(X[0])], axis=1) 
 
-#Preparing the dataloader
-train_loader = torch.utils.data.DataLoader(X_train, batch_size=1, shuffle=True)
-test_loader = torch.utils.data.DataLoader(X_test, batch_size=1, shuffle=True)
+else:
+    print("No datset chosen\nClosing the program")
+    quit()
 
-#Samples to show from the data
-n_data = 6
+X, y = shuffle(X, y, random_state=0)
 
-data_iter = iter(train_loader)
-fig, axes = plt.subplots(nrows=1, ncols=n_data, figsize=(10, 3))
+X_train,X_test, y_train, y_test = train_test_split(X,y,test_size=0.25, stratify=y)
 
-while n_data > 0:
-    images, targets = data_iter.__next__()
+#Or use this method:
+scaler2 = MinMaxScaler()
+scaler2.fit(X_train)
+X_train = scaler2.transform(X_train)
+X_test = scaler2.transform(X_test)
 
-    axes[n_data - 1].imshow(images[0].numpy().squeeze(), cmap='gray')
-    axes[n_data - 1].set_xticks([])
-    axes[n_data - 1].set_yticks([])
-    axes[n_data - 1].set_title("Labeled: {}".format(targets.item()))
-    
-    n_data -= 1
-#plt.show()
+def train(circuit, n_epochs, n_batch_size, initial_thetas,lr, X_tr, y_tr, X_te, y_te):
+    #Creating optimization object
+    optimizer=optimize(lr, circuit)
+    #Splits the dataset into batches
+    batches=len(X_tr)//n_batch_size
+    #Adds another batch if it has a reminder
+    if len(X_tr)%n_batch_size!=0:
+        batches+=1
+    #Reshapes the data into batches
+    X_reshaped=np.reshape(X_tr,(batches,n_batch_size,X_tr.shape[1]))
+    theta_params=initial_thetas.copy()
 
+    #Defines a list containing all the prediction for each epoch
+    prediction_epochs_train=[]
+    loss_train=[]
+    accuracy_train=[]
 
-#Creating the network
-class Net(nn.Module):
-    def __init__(self):
-        super(Net, self).__init__()
-        self.conv1 = nn.Conv2d(1, 6, kernel_size=5)
-        self.conv2 = nn.Conv2d(6, 16, kernel_size=5)
-        self.dropout = nn.Dropout2d()
-        self.fc1 = nn.Linear(256, 64)
-        self.fc2 = nn.Linear(64, 1)
-        self.hybrid = Hybrid(qiskit.Aer.get_backend('qasm_simulator'), 100, np.pi / 2)
+    prediction_epochs_test=[]
+    loss_test=[]
+    accuracy_test=[]
 
-    def forward(self, x):
-        x = F.relu(self.conv1(x))
-        x = F.max_pool2d(x, 2)
-        x = F.relu(self.conv2(x))
-        x = F.max_pool2d(x, 2)
-        x = self.dropout(x)
-        x = x.view(1, -1)
-        x = F.relu(self.fc1(x))
-        x = self.fc2(x)
-        x = self.hybrid(x)
-        return torch.cat((x, 1 - x), -1)
-
-
-
-#Training the network
-model = Net()
-optimizer = optim.Adam(model.parameters(), lr=0.001)
-#loss_func = nn.CrossEntropyLoss()
-#loss_func = nn.BCEWithLogitsLoss()
-#loss_func = nn.MSELoss()
-loss_func = nn.NLLLoss()
-
-epochs = 20
-loss_list = []
-
-model.train()
-for epoch in range(epochs):
-    total_loss = []
-    for batch_idx, (data, target) in enumerate(train_loader):
-        optimizer.zero_grad()
-        # Forward pass
-        output = model(data)
-        # Calculating loss
-        loss = loss_func(output, target)
-        # Backward pass
-        loss.backward()
-        # Optimize the weights
-        optimizer.step()
+    temp_list=[]
+    #Train parameters
+    for epoch in range(n_epochs):
+        #print(f"Epoch:{epoch}")
+        for batch in range(batches):
+            #print(f"Batch:{batch}")
+            batch_pred=circuit.predict(X_reshaped[batch],theta_params)
+            #print(batch_pred, y_tr[batch:batch+n_batch_size])
+            temp_list+=batch_pred
+            theta_params=optimizer.gradient_descent(theta_params, batch_pred, y_tr[batch:batch+n_batch_size], X_reshaped[batch])
         
-        total_loss.append(loss.item())
-    loss_list.append(sum(total_loss)/len(total_loss))
-    print('Training [{:.0f}%]\tLoss: {:.4f}'.format(
-        100. * (epoch + 1) / epochs, loss_list[-1]))
-
-plt.plot(loss_list)
-plt.title('Hybrid NN Training Convergence')
-plt.xlabel('Training Iterations')
-plt.ylabel('Neg Log Likelihood Loss')
-plt.show()
-
-#Testing the network
-model.eval()
-with torch.no_grad():
-    
-    correct = 0
-    for batch_idx, (data, target) in enumerate(test_loader):
-        output = model(data)
+        #Computes loss and predicts on the test set with the new parameters
+        train_loss=optimizer.binary_cross_entropy(temp_list,y_tr)
+        test_pred=circuit.predict(X_te,theta_params)
+        test_loss=optimizer.binary_cross_entropy(test_pred,y_te)
         
-        pred = output.argmax(dim=1, keepdim=True) 
-        correct += pred.eq(target.view_as(pred)).sum().item()
+        #Tresholding the probabillities into hard label predictions
+        temp_list=hard_labels(temp_list, 0.5)
+        test_pred=hard_labels(test_pred,0.5)
+
+        #Computes the accuracy scores
+        acc_score=accuracy_score(y_tr,temp_list)
+        acc_score_test=accuracy_score(y_te, test_pred)
         
-        loss = loss_func(output, target)
-        total_loss.append(loss.item())
-        
-    print('Performance on test data:\n\tLoss: {:.4f}\n\tAccuracy: {:.1f}%'.format(
-        sum(total_loss) / len(total_loss),
-        correct / len(test_loader) * 100))
+        print(f"Epoch: {epoch}, loss:{train_loss}, accuracy:{acc_score}")
+        #Saving the results
+        loss_train.append(train_loss)
+        accuracy_train.append(acc_score)
+        prediction_epochs_train.append(temp_list)
+        loss_test.append(test_loss)
+        accuracy_test.append(acc_score_test)
+        prediction_epochs_test.append(test_pred)
 
-n_data_train= 6
-count = 0
-fig, axes = plt.subplots(nrows=1, ncols=n_data_train, figsize=(10, 3))
+        temp_list.clear()
 
-model.eval()
-with torch.no_grad():
-    for batch_idx, (data, target) in enumerate(test_loader):
-        if count == n_data_train:
-            break
-        output = model(data)
-        
-        pred = output.argmax(dim=1, keepdim=True) 
+    return loss_train, accuracy_train, loss_test, accuracy_test
 
-        axes[count].imshow(data[0].numpy().squeeze(), cmap='gray')
+#Use: 10,0.1,1,0.01
+n_params=20
+learning_rate=0.01
+batch_size=1
+init_params=np.random.uniform(0.,0.01,size=n_params)
 
-        axes[count].set_xticks([])
-        axes[count].set_yticks([])
-        axes[count].set_title('Predicted {}'.format(pred.item()))
-        
-        count += 1
-    plt.show()
+epochs=50
+qc=QML(0,X.shape[1], 1, n_params, backend="qasm_simulator", shots=1024)
+"""
+X_train=np.array([X_train[0]])
+y_train=np.array([y_train[0]])
+X_test=np.array([X_test[0]])
+y_test=np.array([y_test[0]])
+print(X_train,y_train)
+"""
+
+train_loss, train_accuracy, test_loss, test_accuracy =train(qc, epochs, batch_size, 
+                                                            init_params, learning_rate, X_tr=X_train,
+                                                            y_tr=y_train, X_te=X_test,y_te=y_test)
+
+#Saving the results:
+os.join
+saved_path="Results/saved_arrays/"
+np.save(saved_path, x)
+np.save('trainlosses.npy', np.array(trainlosses))
+
+#Analyze results
 
 
 
-#Steps:
-#Rewrite the program
-#Try with sgd or gradient descent instead of adam to see if the accuracy reduces
-#Try with the ansatz from project 2
+
+
+#Next steps:
+"""
+Things to try to fix the training:
+-Switch up the ansatz, create an easier one and switch up the entanglement
+-Have a look at the loss function, maybe implement the one in the project, scikit loss?
+-Okay, should I try to sigmoid the function?
+
+Do this now: Fix another ansats, put it in the descriptin, change loss function to binary cross,
+             have a look at the derivative og the binary cross
+
+-Try training the thing
+    -Explore with the batch size, batch size is how many samples 
+    that will be predicted before the gradient descent does one loop. 1 loop only? i think so
+-Try adding epochs and such to see how much the loss/accuracy is
+-Maybe try plotting as a function of parameters, and play with initialization params of theta
+-Maybe spread out the ansatz making it look better
+-Add another ansatz, cool one in lin 6 bookmark
+-try both ansatzes on breast cancer dataset
+-Try to use an entanglement encoder which is a cnot but on all cirquits in separate thing
+-Explore best epoch and batch size
+-Choose batch and epoch from test or train or validation set?
+-Normalized, so the largest output is 1 and smallest output is 0,
+therefor softmax or sigmoid is not nessecary.
+-Remember to seed the initialization theta
+-Some dead neurons, test with it
+-For each computed training epoch, use the same parameters on testing? for each batch even?
+
+Mean training loss of all batches for a specific epoch
+Then use the same output parameters on the test set
+
+#-Make it ready to plot
+-Fix the ansatz and batch maybe
+-Plot learning rate and diff parameters with fork
+-Choose the best lr and param
+-Maybe explore the initialization also? gaussian/uniform, initialiation rate
+
+-Plot train accuracy and train loss with test, beside or in same plot?
+
+
+
+Reoport:
+error and accuracy vs batch size
+error and accuracy vs epoch
+lr vs accuracy or error
+accuracy as a function of parameters with different learning rates
+
+
+Appendix: derivative of gradient
+"""
+
+#Notes to self
+#Compute loss, the deriavtive in gradient descent or adam is computed by evaluate the cirquit twice pi/2,
+#Did I normalize the circuit between 0 and 2pi?
