@@ -8,6 +8,7 @@ class optimize:
 
         Args:
             learning_rate:  Learning rate used in gradient descent
+            circuit:        Quantum circuit that is used
         """
 
         self.learning_rate=learning_rate

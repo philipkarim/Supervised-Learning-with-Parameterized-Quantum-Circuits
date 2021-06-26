@@ -9,7 +9,8 @@ class QML:
         Class that creates a parameterized quantum circuit
 
         Args:
-            ansatz: 0=ry along all qubits, in addition to cx between pairwise gates as follows:
+            ansatz: 0=ry along all qubits, in addition to cx between pairwise gates as follows
+            (Parametervalues in the circuits depends on the input parameters):
                           ┌───────┐      ┌────────┐                      ┌─────────┐     
                     q0_0: ┤ RY(0) ├───■──┤ RY(8π) ├────────────────■─────┤ RY(16π) ├──■──
                           ├───────┴┐┌─┴─┐└────────┘┌─────────┐   ┌─┴─┐   ├─────────┤  │  
@@ -50,11 +51,6 @@ class QML:
         self.shots = shots
         self.n_parameters=n_parameters
 
-        #Variational parameter
-        #self.theta = qk.circuit.Parameter('theta')
-
-        #self.theta=np.random.uniform(size=)
-
         #Registers
         self.data_register = qk.QuantumRegister(n_qubits)
         self.classical_register = qk.ClassicalRegister(n_cbits)
@@ -74,9 +70,6 @@ class QML:
 
         for feature_idx in range(self.n_qubits):
             self.qc_enc.h(self.data_register[feature_idx])
-            #print(feature_idx)
-            #print(sample)
-            #print(self.data_register)
             self.qc_enc.rz(2*np.pi*sample[feature_idx],self.data_register[feature_idx])
         
         return self.qc_enc
@@ -99,36 +92,25 @@ class QML:
         reminder_gates=self.n_parameters%self.n_qubits
 
         if self.ansatz==0:
-            #Creating the ansatz circuit:
+            #Checks how many "blocks of repetitions goes in the circuit"
             if reminder_gates!=0:
                 blocks=ansatz_parts+1
             else:
                 blocks=ansatz_parts
-            
-            #Controlled and counting each x gate to stop when appropriate?
-            #controlled_x=
 
+            #Creating the ansatz circuit:
             tot_gates=0
             for block in range(blocks):
                 for rot_y in range(self.n_qubits):
                     if rot_y+self.n_qubits*block<self.n_parameters:
                         self.qc_ansatz.ry(2*np.pi*self.thetas[rot_y+self.n_qubits*block], self.data_register[rot_y])
                         tot_gates+=1
-                    if rot_y!=0 and tot_gates<   len(self.thetas)-reminder_gates-1:
+                    if rot_y!=0 and tot_gates<len(self.thetas)-reminder_gates-1:
                         self.qc_ansatz.cx(self.data_register[rot_y-1], self.data_register[rot_y])
             
             #Entangling the qubits before measuring
-            """
-            self.ansatz.controlx()
-            qc = QuantumCircuit(qr)
-            c3X_gate = qk.XGate().control(3)
-            self.qc_ansatz.c3X_gate(self.data_register[4])
-            """
-
             c3h_gate = XGate().control(3)
             self.qc_ansatz.append(c3h_gate, self.data_register)
-
-            #print(self.qc_ansatz)       
 
         elif self.ansatz==1:
             #Creating the ansatz circuit:
@@ -148,27 +130,11 @@ class QML:
         else:
             print("Chosen ansatz, is not available, set ansatz to 0 or 1.\n Terminating program")
             quit()
-            """
-            #Copies the ansatz multiple times to ensure that the wanted number of parameters is used:
-            if ansatz_parts>1:
-                for ansatz in range(ansatz_parts-1):
-                    self.qc_ansatz.compose(self.qc_ansatz, front=False, inplace=True)
 
-            #Adds the extra reminder gates
-            for rot_y_reminder in range(reminder_gates):
-                self.qc_ansatz.ry(self.thetas[rot_y_reminder], self.data_register[rot_y_reminder])
-                if rot_y_reminder!=0:
-                    for con_x_reminder in range(rot_y_reminder):
-                        self.qc_ansatz.cx(self.data_register[con_x_reminder], self.data_register[rot_y_reminder])
-            """
         return self.qc_ansatz
     
     def create_qcircuit(self, sample, parameters):
         #Assigns values to the theta parameter defined in init
-        #self.theta.assign(self.theta,parameters)
-
-        #for thet in range(len(parameters)):
-        #    self.theta[thet]=parameters[thet]
 
         self.make_encoder_cir(sample)
         self.make_param_cir(parameters)
@@ -189,7 +155,7 @@ class QML:
         for samp in range(designX.shape[0]):
             self.create_qcircuit(designX[samp], params)
             #predictions_array[samp]=self.run()
-            predictions_list.append(sigmoid(self.run()))
+            predictions_list.append((self.run()))
         
         return predictions_list
     

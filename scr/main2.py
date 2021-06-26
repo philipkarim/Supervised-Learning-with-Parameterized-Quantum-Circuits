@@ -6,6 +6,7 @@ os.environ['KMP_DUPLICATE_LIB_OK']='True'
 #Importing packages 
 import numpy as np
 import matplotlib.pyplot as plt
+import random
 
 #Importing qiskit
 import qiskit as qk
@@ -15,36 +16,44 @@ from sklearn import datasets
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import scale, StandardScaler, MinMaxScaler
 from sklearn.utils import shuffle
+from sklearn.datasets import load_breast_cancer
 
 #Import the parameterized quantum circuit class
 from PQC import QML
 from optimize_loss import optimize
 from utils import *
 
-#Handling the data
-iris = datasets.load_iris()
-X = iris.data
-y = iris.target
-idx = np.where(y < 2) # we only take the first two targets.
+#Seeding the program
+random.seed(2021)
 
-X = X[idx,:]
-X=np.squeeze(X, axis=0)
-y = y[idx]
+#Handling the data
+#Choose a datset
+dataset="iris"
+#dataset="breastcancer"
+
+if dataset=="iris":
+    iris = datasets.load_iris()
+    X = iris.data
+    y = iris.target
+    idx = np.where(y < 2) # we only take the first two targets.
+
+    X = X[idx,:]
+    X=np.squeeze(X, axis=0)
+    y = y[idx]
+
+elif dataset=="breastcancer":
+    data = load_breast_cancer()
+    X = data.data #features
+    y = data.target #targets
+    X=np.delete(X, np.s_[4:len(X[0])], axis=1) 
+
+else:
+    print("No datset chosen\nClosing the program")
+    quit()
 
 X, y = shuffle(X, y, random_state=0)
 
-#X, X_test, y, y_test = train_test_split(X,y,test_size=0.92,stratify=y)
-X_train,X_test, y_train, y_test = train_test_split(X,y,test_size=0.25)
-
-"""
-# Scaling the data using the scikit learn modules
-scaler = StandardScaler();  
-scaler.fit(X_train)
-X_train_scaled = scaler.transform(X_train)
-X_test_scaled = scaler.transform(X_test)
-#print(X_test)
-#print(X_test_scaled)
-"""
+X_train,X_test, y_train, y_test = train_test_split(X,y,test_size=0.25, stratify=y)
 
 #Or use this method:
 scaler2 = MinMaxScaler()
@@ -60,9 +69,9 @@ def train(circuit, n_epochs, n_batch_size, initial_thetas,lr, X_tr, y_tr, X_te, 
     #Adds another batch if it has a reminder
     if len(X_tr)%n_batch_size!=0:
         batches+=1
-    #Reshapes the data
+    #Reshapes the data into batches
     X_reshaped=np.reshape(X_tr,(batches,n_batch_size,X_tr.shape[1]))
-    theta_params=initial_thetas.copy()
+    theta_params=initial_thetas
 
     #Defines a list containing all the prediction for each epoch
     prediction_epochs_train=[]
@@ -80,6 +89,7 @@ def train(circuit, n_epochs, n_batch_size, initial_thetas,lr, X_tr, y_tr, X_te, 
         for batch in range(batches):
             #print(f"Batch:{batch}")
             batch_pred=circuit.predict(X_reshaped[batch],theta_params)
+            print(batch_pred,y_tr[0])
             temp_list+=batch_pred
             theta_params=optimizer.gradient_descent(theta_params, batch_pred, y_tr[batch:batch+n_batch_size], X_reshaped[batch])
         
@@ -109,16 +119,20 @@ def train(circuit, n_epochs, n_batch_size, initial_thetas,lr, X_tr, y_tr, X_te, 
 
     return loss_train, accuracy_train, loss_test, accuracy_test
 
-n_params=8
-learning_rate=1.0
+n_params=10
+learning_rate=0.1
 batch_size=1
-init_params=np.random.uniform(0.25,0.75,size=n_params)
-#init_params=np.arange(n_params)
+init_params=np.random.uniform(0.,0.01,size=n_params)
 
 epochs=50
 qc=QML(0,X.shape[1], 1, n_params, backend="qasm_simulator", shots=1024)
 
-#Shuffle the data, print by accuracy score
+X_train=np.array([X_train[0]])
+y_train=np.array([y_train[0]])
+X_test=np.array([X_test[0]])
+y_test=np.array([y_test[0]])
+
+print(X_train,y_train)
 
 train_loss, train_accuracy, test_loss, test_accuracy =train(qc, epochs, batch_size, 
                                                             init_params, learning_rate, X_tr=X_train,
