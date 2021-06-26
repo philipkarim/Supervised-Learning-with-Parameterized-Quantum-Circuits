@@ -163,24 +163,24 @@ def investigate_distribution(type, folder_name):
     """
     pid = os.fork()
     if pid:
-        train_loss, train_accuracy, test_loss, test_accuracy=train(qc, epochs, batch_size, getDistribution("U", 0.01, n_params), learning_rate, X_tr=X_train,y_tr=y_train, X_te=X_test,y_te=y_test)
+        train_loss, train_accuracy, test_loss, test_accuracy=train(qc, epochs, batch_size, getDistribution(type, 0.01, n_params), learning_rate, X_tr=X_train,y_tr=y_train, X_te=X_test,y_te=y_test)
         np.save(data_path(folder_name, "train"+type+"0_01.npy"), np.array(train_loss))
         np.save(data_path(folder_name, "test"+type+"0_01.npy"), np.array(test_loss))
 
     else:
         pid1 = os.fork()
         if pid1:
-            train_loss, train_accuracy, test_loss, test_accuracy=train(qc, epochs, batch_size, getDistribution("U", 0.1, n_params), learning_rate, X_tr=X_train,y_tr=y_train, X_te=X_test,y_te=y_test)
+            train_loss, train_accuracy, test_loss, test_accuracy=train(qc, epochs, batch_size, getDistribution(type, 0.1, n_params), learning_rate, X_tr=X_train,y_tr=y_train, X_te=X_test,y_te=y_test)
             np.save(data_path(folder_name, "train"+type+"0_1.npy"), np.array(train_loss))
             np.save(data_path(folder_name, "test"+type+"0_1.npy"), np.array(test_loss))
         else:
             pid2=os.fork()
             if pid2:
-                train_loss, train_accuracy, test_loss, test_accuracy=train(qc, epochs, batch_size, getDistribution("U", 0.25, n_params), learning_rate, X_tr=X_train,y_tr=y_train, X_te=X_test,y_te=y_test)
+                train_loss, train_accuracy, test_loss, test_accuracy=train(qc, epochs, batch_size, getDistribution(type, 0.25, n_params), learning_rate, X_tr=X_train,y_tr=y_train, X_te=X_test,y_te=y_test)
                 np.save(data_path(folder_name, "train"+type+"0_25.npy"), np.array(train_loss))
                 np.save(data_path(folder_name, "test"+type+"0_25.npy"), np.array(test_loss))            
             else:
-                train_loss, train_accuracy, test_loss, test_accuracy=train(qc, epochs, batch_size, getDistribution("U", 0.001, n_params), learning_rate, X_tr=X_train,y_tr=y_train, X_te=X_test,y_te=y_test)
+                train_loss, train_accuracy, test_loss, test_accuracy=train(qc, epochs, batch_size, getDistribution(type, 0.001, n_params), learning_rate, X_tr=X_train,y_tr=y_train, X_te=X_test,y_te=y_test)
                 np.save(data_path(folder_name, "train"+type+"0_001.npy"), np.array(train_loss))
                 np.save(data_path(folder_name, "test"+type+"0_001.npy"), np.array(test_loss))
     
@@ -197,7 +197,7 @@ file_folder=data_path(path,folder)
 
 if inspect_distribution==True:
     file_folder=data_path(path,folder)
-    investigate_distribution("U", file_folder)
+    investigate_distribution("N", file_folder)
 
 if regular_run==True:
     train_loss, train_accuracy, test_loss, test_accuracy =train(qc, epochs, batch_size, 
