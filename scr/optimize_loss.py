@@ -76,28 +76,14 @@ class optimize:
     def parameter_shift(self, sample, theta_array, theta_index):
         theta_left_shift=theta_array.copy()
         theta_right_shift=theta_array.copy()
+        
         #Since the cirquits are normalised the shift is 0.25 which represents pi/2
         theta_right_shift[theta_index]+=0.25
         theta_left_shift[theta_index]-=0.25
-        
-        """
-        print("_____this")
-        print(theta_index)
-        print(theta_array)
-        print(theta_right_shift)
-        print(theta_left_shift)
-        print("________this")
-        """
 
-        #This is quiet weird, even though the parameter shift are different, 
-        #the prediction is still the same, is this due to the quantum mechanics?
-
-        #print(theta_right_shift)
-        #print(theta_left_shift)
         pred_right_shift=self.circuit.predict(np.array([sample]),theta_right_shift)
         pred_left_shift=self.circuit.predict(np.array([sample]),theta_left_shift)
-        #print(pred_right_shift)
-        #print(pred_left_shift)
+        
         theta_grad=(pred_right_shift[0]-pred_left_shift[0])/2
         #print(theta_grad)
         return theta_grad

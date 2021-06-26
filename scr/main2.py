@@ -71,7 +71,7 @@ def train(circuit, n_epochs, n_batch_size, initial_thetas,lr, X_tr, y_tr, X_te, 
         batches+=1
     #Reshapes the data into batches
     X_reshaped=np.reshape(X_tr,(batches,n_batch_size,X_tr.shape[1]))
-    theta_params=initial_thetas
+    theta_params=initial_thetas.copy()
 
     #Defines a list containing all the prediction for each epoch
     prediction_epochs_train=[]
@@ -121,7 +121,7 @@ def train(circuit, n_epochs, n_batch_size, initial_thetas,lr, X_tr, y_tr, X_te, 
 
 #Use: 10,0.1,1,0.01
 n_params=20
-learning_rate=0.1
+learning_rate=0.01
 batch_size=1
 init_params=np.random.uniform(0.,0.01,size=n_params)
 
@@ -139,8 +139,15 @@ train_loss, train_accuracy, test_loss, test_accuracy =train(qc, epochs, batch_si
                                                             init_params, learning_rate, X_tr=X_train,
                                                             y_tr=y_train, X_te=X_test,y_te=y_test)
 
+#Saving the results:
+os.join
+saved_path="Results/saved_arrays/"
+np.save(saved_path, x)
+np.save('trainlosses.npy', np.array(trainlosses))
 
 #Analyze results
+
+
 
 
 
@@ -173,6 +180,15 @@ therefor softmax or sigmoid is not nessecary.
 
 Mean training loss of all batches for a specific epoch
 Then use the same output parameters on the test set
+
+#-Make it ready to plot
+-Fix the ansatz and batch maybe
+-Plot learning rate and diff parameters with fork
+-Choose the best lr and param
+-Maybe explore the initialization also? gaussian/uniform, initialiation rate
+
+-Plot train accuracy and train loss with test, beside or in same plot?
+
 
 
 Reoport:
