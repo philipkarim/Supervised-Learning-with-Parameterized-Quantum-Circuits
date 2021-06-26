@@ -161,7 +161,12 @@ def investigate_distribution():
         print("\nI am child process:")
         print("Process ID:", os.getpid())
         print("Parent's process ID:", os.getppid())
-    
+
+    for job in range(4):
+        child = os.fork()
+        if child:
+            print(job)
+
     #train_loss, train_accuracy, test_loss, test_accuracy =train(qc, epochs, batch_size, 
      #                                                       init_params, learning_rate, X_tr=X_train,
       #                                                      y_tr=y_train, X_te=X_test,y_te=y_test)
