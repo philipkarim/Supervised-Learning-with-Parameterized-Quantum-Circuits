@@ -17,7 +17,7 @@ class optimize:
     def gradient_descent(self, params, predicted, target, samples):
         update=self.learning_rate *self.gradient_of_loss(params, predicted, target, samples)
         #print(update)
-        params+= update
+        params-= update
 
         return params
 
@@ -116,7 +116,10 @@ class optimize:
                 #print(thet, grad_theta)
                 #print(grad_theta)
                 deno=(predicted[i]+eps)*(1-predicted[i]-eps)
-                sum+=grad_theta*abs(predicted[i]-target[i])/deno
+                sum+=grad_theta*(predicted[i]-target[i])/deno
+                #sum+=abs(grad_theta*(predicted[i]-target[i]))/deno
+                #sum+=grad_theta*abs(predicted[i]-target[i]))/deno
+
             gradients[thet]=sum
         
         return gradients

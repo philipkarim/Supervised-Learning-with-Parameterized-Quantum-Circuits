@@ -89,7 +89,7 @@ def train(circuit, n_epochs, n_batch_size, initial_thetas,lr, X_tr, y_tr, X_te, 
         for batch in range(batches):
             #print(f"Batch:{batch}")
             batch_pred=circuit.predict(X_reshaped[batch],theta_params)
-            print(batch_pred,y_tr[0])
+            #print(batch_pred, y_tr[batch:batch+n_batch_size])
             temp_list+=batch_pred
             theta_params=optimizer.gradient_descent(theta_params, batch_pred, y_tr[batch:batch+n_batch_size], X_reshaped[batch])
         
@@ -106,7 +106,7 @@ def train(circuit, n_epochs, n_batch_size, initial_thetas,lr, X_tr, y_tr, X_te, 
         acc_score=accuracy_score(y_tr,temp_list)
         acc_score_test=accuracy_score(y_te, test_pred)
         
-        print(f"Epoch: {epoch}, loss:{train_loss}, accurcay:{acc_score}")
+        print(f"Epoch: {epoch}, loss:{train_loss}, accuracy:{acc_score}")
         #Saving the results
         loss_train.append(train_loss)
         accuracy_train.append(acc_score)
@@ -119,20 +119,21 @@ def train(circuit, n_epochs, n_batch_size, initial_thetas,lr, X_tr, y_tr, X_te, 
 
     return loss_train, accuracy_train, loss_test, accuracy_test
 
-n_params=10
+#Use: 10,0.1,1,0.01
+n_params=20
 learning_rate=0.1
 batch_size=1
 init_params=np.random.uniform(0.,0.01,size=n_params)
 
 epochs=50
 qc=QML(0,X.shape[1], 1, n_params, backend="qasm_simulator", shots=1024)
-
+"""
 X_train=np.array([X_train[0]])
 y_train=np.array([y_train[0]])
 X_test=np.array([X_test[0]])
 y_test=np.array([y_test[0]])
-
 print(X_train,y_train)
+"""
 
 train_loss, train_accuracy, test_loss, test_accuracy =train(qc, epochs, batch_size, 
                                                             init_params, learning_rate, X_tr=X_train,
@@ -178,7 +179,7 @@ Reoport:
 error and accuracy vs batch size
 error and accuracy vs epoch
 lr vs accuracy or error
-
+accuracy as a function of parameters with different learning rates
 
 
 Appendix: derivative of gradient
