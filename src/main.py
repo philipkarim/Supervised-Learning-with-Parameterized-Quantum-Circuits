@@ -114,8 +114,13 @@ def train(circuit, n_epochs, n_batch_size, initial_thetas,lr, X_tr, y_tr, X_te, 
     theta_params=initial_thetas.copy()
 
     #Defines a list containing all the prediction for each epoch
-    prediction_epochs_train=[], loss_train=[], accuracy_train=[]
-    prediction_epochs_test=[], loss_test=[], accuracy_test=[]
+    prediction_epochs_train=[]
+    loss_train=[]
+    accuracy_train=[]
+    
+    prediction_epochs_test=[]
+    loss_test=[]
+    accuracy_test=[]
     
     temp_list=[]
     #Train parameters
