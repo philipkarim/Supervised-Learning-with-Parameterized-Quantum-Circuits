@@ -82,16 +82,16 @@ X_test = scaler2.transform(X_test)
 n_params=10
 learning_rate=0.01
 batch_size=1
-init_params=np.random.normal(0.,0.01,size=n_params)
+init_params=np.random.uniform(0.,0.1,size=n_params)
 ansatz=0
 epochs=50
 qc=QML(ansatz,X.shape[1], 1, n_params, backend="qasm_simulator", shots=1024)
 qc_2=QML(1,X.shape[1], 1, n_params, backend="qasm_simulator", shots=1024)
 
 #Choose type of investigation, if all parameters are chosen prehand, set both to false
-regular_run=True
+regular_run=False
 inspect_distribution=False
-inspect_lr_param=False
+inspect_lr_param=True
 
 def train(circuit, n_epochs, n_batch_size, initial_thetas,lr, X_tr, y_tr, X_te, y_te):
     #Creating optimization object
@@ -202,14 +202,15 @@ def investigate_lr_params(folder_name, folder_name2, lr_list, n_params_list):
     if pid:
         for i in lr_list:
             for j in n_params_list:
-                train_loss, train_accuracy, test_loss, test_accuracy=train(qc, epochs, batch_size, np.random.normal(0.,0.01,size=j), i, X_tr=X_train,y_tr=y_train, X_te=X_test,y_te=y_test)
+                print(j)
+                train_loss, train_accuracy, test_loss, test_accuracy=train(qc, epochs, batch_size, np.random.uniform(0.,0.1,size=j), i, X_tr=X_train,y_tr=y_train, X_te=X_test,y_te=y_test)
                 np.save(data_path(folder_name, "lr_params/train_lr"+str(i)+"_n"+str(j)+".npy"), np.array(train_loss))
                 np.save(data_path(folder_name, "lr_params/test_lr"+str(i)+"_n"+str(j)+".npy"), np.array(test_loss))
 
     else:
         for ii in lr_list:
             for jj in n_params_list:
-                train_loss, train_accuracy, test_loss, test_accuracy=train(qc_2, epochs, batch_size, np.random.normal(0.,0.01,size=jj), ii, X_tr=X_train,y_tr=y_train, X_te=X_test,y_te=y_test)
+                train_loss, train_accuracy, test_loss, test_accuracy=train(qc_2, epochs, batch_size, np.random.uniform(0.,0.1,size=jj), ii, X_tr=X_train,y_tr=y_train, X_te=X_test,y_te=y_test)
                 np.save(data_path(folder_name2, "lr_params/train_lr"+str(ii)+"_n"+str(jj)+".npy"), np.array(train_loss))
                 np.save(data_path(folder_name2, "lr_params/test_lr"+str(ii)+"_n"+str(jj)+".npy"), np.array(test_loss))
     
@@ -232,9 +233,7 @@ elif inspect_lr_param==True:
     file_folder2=data_path(path,"ansatz_1/")
     #Learning rates and number of paraeters to investigate
     lrs=[0.1, 0.01, 0.001, 0.0001]
-    n_par=[4, 8, 12, 16, 20, 24]
-    lrs=[0.1]
-    n_par=[4]
+    n_par=[10, 14, 18, 22, 26, 30]
     investigate_lr_params(file_folder, file_folder2, lrs, n_par)
 
 elif regular_run==True:
