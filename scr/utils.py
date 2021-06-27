@@ -53,7 +53,7 @@ CB91_Amber = '#F5B14C'
 color_list = [CB91_Blue, CB91_Pink, CB91_Green, CB91_Amber, CB91_Violet]
 #plt.rcParams['axes.prop_cycle'] = plt.cycler(color=color_list)
 
-def plotter(*args, x_label, y_label):
+def plotter(*args, x_axis,x_label, y_label):
     """
     Just a function to plot functions.
 
@@ -62,13 +62,15 @@ def plotter(*args, x_label, y_label):
           x_label:  Name of x axis(string)
           y_label:  Name of y axis(string)
     """
-    if args>3:
-        for i in range(len(args)/3):
-            plt.plot(args[i], args[i+1], label=args[i+2])
-        plt.legend()
-
+    if len(args)>1:
+        for i in range(0, int(len(args)),2):
+            plt.plot(x_axis, args[i], label=args[i+1])
+            plt.legend()
+        plt.xlabel(x_label,fontsize=12)
+        plt.ylabel(y_label,fontsize=12)
+        #plt.ylim(0,1)
     else:
-        plt.plot(args[0], args[1], label=args[2])
+        plt.plot(x_axis, args[0])
         plt.xlabel(x_label,fontsize=12)
         plt.ylabel(y_label,fontsize=12)
     plt.show()
