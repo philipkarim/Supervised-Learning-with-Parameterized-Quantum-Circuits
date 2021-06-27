@@ -83,14 +83,14 @@ n_params=10
 learning_rate=0.01
 batch_size=1
 init_params=np.random.normal(0.,0.01,size=n_params)
-ansatz=1
+ansatz=0
 epochs=50
 qc=QML(ansatz,X.shape[1], 1, n_params, backend="qasm_simulator", shots=1024)
 qc_2=QML(1,X.shape[1], 1, n_params, backend="qasm_simulator", shots=1024)
 
 #Choose type of investigation, if all parameters are chosen prehand, set both to false
-regular_run=False
-inspect_distribution=True
+regular_run=True
+inspect_distribution=False
 inspect_lr_param=False
 
 def train(circuit, n_epochs, n_batch_size, initial_thetas,lr, X_tr, y_tr, X_te, y_te):
