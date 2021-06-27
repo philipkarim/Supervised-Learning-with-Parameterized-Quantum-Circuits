@@ -202,7 +202,7 @@ def investigate_lr_params(folder_name, folder_name2, lr_list, n_params_list):
     if pid:
         for i in lr_list:
             for j in n_params_list:
-                print(j)
+                print("Ansatz 0: ", j, i)
                 train_loss, train_accuracy, test_loss, test_accuracy=train(qc, epochs, batch_size, np.random.uniform(0.,0.1,size=j), i, X_tr=X_train,y_tr=y_train, X_te=X_test,y_te=y_test)
                 np.save(data_path(folder_name, "lr_params/train_lr"+str(i)+"_n"+str(j)+".npy"), np.array(train_loss))
                 np.save(data_path(folder_name, "lr_params/test_lr"+str(i)+"_n"+str(j)+".npy"), np.array(test_loss))
@@ -210,6 +210,7 @@ def investigate_lr_params(folder_name, folder_name2, lr_list, n_params_list):
     else:
         for ii in lr_list:
             for jj in n_params_list:
+                print("Ansatz 1: ",jj, ii)
                 train_loss, train_accuracy, test_loss, test_accuracy=train(qc_2, epochs, batch_size, np.random.uniform(0.,0.1,size=jj), ii, X_tr=X_train,y_tr=y_train, X_te=X_test,y_te=y_test)
                 np.save(data_path(folder_name2, "lr_params/train_lr"+str(ii)+"_n"+str(jj)+".npy"), np.array(train_loss))
                 np.save(data_path(folder_name2, "lr_params/test_lr"+str(ii)+"_n"+str(jj)+".npy"), np.array(test_loss))
