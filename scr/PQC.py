@@ -1,6 +1,5 @@
 import qiskit as qk
 import numpy as np
-from utils import sigmoid
 from qiskit.circuit.library.standard_gates import XGate
 
 class QML:
@@ -134,7 +133,15 @@ class QML:
         return self.qc_ansatz
     
     def create_qcircuit(self, sample, parameters):
-        #Assigns values to the theta parameter defined in init
+        """
+        Puts the cirquit together and assigns parameter values to each
+        of the gates
+
+        Args:   
+                sample:     Values of the samples that are going 
+                            into the cirquit(list or array)
+                parameters: variational parameters (list or array)
+        """
 
         self.make_encoder_cir(sample)
         self.make_param_cir(parameters)
@@ -146,20 +153,28 @@ class QML:
         return self.qc_enc
 
     def predict(self, designX, params):
-        #Splits up the design matrix
-        #predictions_array=np.zeros(designX.shape[0])
+        """
+        Predicts the output of the cirquit.
+
+        Args:
+                designX:    Design matrix(Matrix, array or list)
+                params:     Variational parameters
+        
+        Returns:List of prediction values
+        """
         predictions_list=[]
 
-        #print(designX.shape[0])
-
+        #Predicting the samples and re
         for samp in range(designX.shape[0]):
             self.create_qcircuit(designX[samp], params)
-            #predictions_array[samp]=self.run()
             predictions_list.append((self.run()))
         
         return predictions_list
     
     def run(self):
+        """
+        Function that runs the quantum simulator
+        """
         job = qk.execute(self.qc_enc,
                         backend=qk.Aer.get_backend(self.backend),
                         shots=self.shots,

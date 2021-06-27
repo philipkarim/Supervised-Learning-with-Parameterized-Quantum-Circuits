@@ -15,8 +15,17 @@ class optimize:
         self.circuit=circuit
 
     def gradient_descent(self, params, predicted, target, samples):
+        """
+        Gradient descent function.
+        
+        Args:
+                params:     Variational parameters(list or array)
+                predicted:  List of predicted values(list or array)
+                target:     True labels of the samples(list or array)
+                samples:    Samples reprenting the true labels and 
+                            predictions. (2D Matrix)
+        """
         update=self.learning_rate *self.gradient_of_loss(params, predicted, target, samples)
-        #print(update)
         params-= update
 
         return params
@@ -24,6 +33,7 @@ class optimize:
     def cross_entropy(self, preds, targets, classes=2, epsilon=1e-12):
         """
         Computes cross entropy between the true labels and the predictions
+        by using distributions. (Not used, binary cross entropy function beneath)
         
         Args:
             preds:   predictions as an array or list
@@ -50,7 +60,7 @@ class optimize:
         loss = -np.sum(distribution_target*np.log(distribution_preds+1e-9))/n_samples
         return loss
 
-    def binary_cross_entropy(self, preds, targets, classes=2, epsilon=1e-12):
+    def binary_cross_entropy(self, preds, targets):
         """
         Computes binary cross entropy between the true labels and the predictions
         
@@ -68,12 +78,22 @@ class optimize:
         return -sum/n_samples
 
 
-        distribution_preds = np.clip(distribution_preds, epsilon, 1. - epsilon)
-        n_samples = len(preds)
-        loss = -np.sum(distribution_target*np.log(distribution_preds+1e-9))/n_samples
-        return loss
-
     def parameter_shift(self, sample, theta_array, theta_index):
+        """
+        Parameter shift funtion, that finds the derivative of a
+        certain variational parameter, by evaluating the cirquit
+        shiftet pi/2 to the left and right.
+
+        Args:
+                sample:     Sample that will be optimized with respect 
+                            of(list or array)
+                theta_array:Variational parameters(list or array)
+                theta_index:Index of the parameter that we want the 
+                            gradient of
+
+        Returns: optimized variational value
+        """
+        #Just copying the parameter arrays
         theta_left_shift=theta_array.copy()
         theta_right_shift=theta_array.copy()
         
@@ -81,30 +101,39 @@ class optimize:
         theta_right_shift[theta_index]+=0.25
         theta_left_shift[theta_index]-=0.25
 
+        #Predicting with the shifted parameters
         pred_right_shift=self.circuit.predict(np.array([sample]),theta_right_shift)
         pred_left_shift=self.circuit.predict(np.array([sample]),theta_left_shift)
         
+        #Computes the gradients
         theta_grad=(pred_right_shift[0]-pred_left_shift[0])/2
-        #print(theta_grad)
+
         return theta_grad
 
     def gradient_of_loss(self, thetas, predicted, target, samples):
+        """
+        Finds the gradient used in gradient descent.
+
+        Args:
+                thetas:     Variational parameters(list or array)
+                predicted:  List of predicted values(list or array)
+                target:     True labels of the samples(list or array)
+                samples:    Samples reprenting the true labels and 
+                            predictions. (2D Matrix)
+
+        Returns:            Gradient 
+        """
+
         gradients=np.zeros(len(thetas))
         eps=1E-8
+        #Looping through variational parameters
         for thet in range(len(thetas)):
             sum=0
+            #Looping through samples
             for i in range(len(predicted)):
-                #Really unsure about this one, okay maybe not,
-                #this works i think
-                #print(samples[i], thetas, thet)
                 grad_theta=self.parameter_shift(samples[i], thetas, thet)
-                #print(grad_theta)
-                #print(thet, grad_theta)
-                #print(grad_theta)
                 deno=(predicted[i]+eps)*(1-predicted[i]-eps)
                 sum+=grad_theta*(predicted[i]-target[i])/deno
-                #sum+=abs(grad_theta*(predicted[i]-target[i]))/deno
-                #sum+=grad_theta*abs(predicted[i]-target[i]))/deno
 
             gradients[thet]=sum
         

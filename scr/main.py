@@ -27,6 +27,21 @@ from utils import *
 #Seeding the program
 random.seed(2021)
 
+#Set parameters
+n_params=10
+learning_rate=0.1
+batch_size=1
+init_params=np.random.uniform(0.,0.01,size=n_params)
+ansatz=0
+epochs=50
+
+#Choose type of investigation, if all parameters are chosen prehand, 
+# set all to false
+inspect_distribution=False
+regular_run_save=False
+inspect_lr_param=False
+
+
 #Handling the data
 #Choose a datset
 dataset="iris"
@@ -46,13 +61,7 @@ if dataset=="iris":
     #dirname=os.path.dirname()
     #print(dirname)
     path="Results/saved_data/iris/"
-    """
-    xx=np.array([1,1,2])
-    np.save("sample.npy", xx)
-    print(np.load("sample.npy"))
-    np.save("Results/saved_arrays/test.npy", xx)
-    print(path)
-    """
+
 
 elif dataset=="breastcancer":
     data = load_breast_cancer()
@@ -69,31 +78,41 @@ else:
 
 X, y = shuffle(X, y, random_state=0)
 
+#Splitting the dataset into a trainset and validation set. 
+# (The validation set is named test set in the code)
 X_train,X_test, y_train, y_test = train_test_split(X,y,test_size=0.25, stratify=y)
 
-#Or use this method:
+#Scaling the data
 scaler2 = MinMaxScaler()
 scaler2.fit(X_train)
 X_train = scaler2.transform(X_train)
 X_test = scaler2.transform(X_test)
 
-#Set parameters
-#Use: 10,0.1,1,0.01
-n_params=10
-learning_rate=0.01
-batch_size=1
-init_params=np.random.uniform(0.,0.1,size=n_params)
-ansatz=0
-epochs=50
+#Creating some qunatum cirquit object
 qc=QML(ansatz,X.shape[1], 1, n_params, backend="qasm_simulator", shots=1024)
 qc_2=QML(1,X.shape[1], 1, n_params, backend="qasm_simulator", shots=1024)
 
-#Choose type of investigation, if all parameters are chosen prehand, set both to false
-regular_run=False
-inspect_distribution=False
-inspect_lr_param=True
-
 def train(circuit, n_epochs, n_batch_size, initial_thetas,lr, X_tr, y_tr, X_te, y_te):
+    """
+    Train(and validation) function that runs the simulation
+
+    Args:
+            circuit:        Quantum circuit (object from the QML class)
+            n_epochs:       Number of epochs(integer) 
+            n_batch_size:   Batch size (Integer)
+            initial_thetas: Initialisation values of the variational parameters
+                            (List or array)
+            lr:             Learning rate (float)
+            X_tr:           Training data (2D array or list)
+            y_tr:           True labels of the training data(list or array)
+            X_te:           Test data (2D array or list)
+            y_tr:           True labels of the test data(list or array)
+    Returns:
+            loss_train,     Loss of train set per epoch (list)
+            accuracy_train, Accuracy of train set per epoch (list)
+            loss_test:      Loss of test set per epoch (list)
+            accuracy_test:  Accuracy of test set per epoch (list)
+    """
     #Creating optimization object
     optimizer=optimize(lr, circuit)
     #Splits the dataset into batches
@@ -106,22 +125,14 @@ def train(circuit, n_epochs, n_batch_size, initial_thetas,lr, X_tr, y_tr, X_te, 
     theta_params=initial_thetas.copy()
 
     #Defines a list containing all the prediction for each epoch
-    prediction_epochs_train=[]
-    loss_train=[]
-    accuracy_train=[]
-
-    prediction_epochs_test=[]
-    loss_test=[]
-    accuracy_test=[]
-
+    prediction_epochs_train=[], loss_train=[], accuracy_train=[]
+    prediction_epochs_test=[], loss_test=[], accuracy_test=[]
+    
     temp_list=[]
     #Train parameters
     for epoch in range(n_epochs):
-        #print(f"Epoch:{epoch}")
         for batch in range(batches):
-            #print(f"Batch:{batch}")
             batch_pred=circuit.predict(X_reshaped[batch],theta_params)
-            #print(batch_pred, y_tr[batch:batch+n_batch_size])
             temp_list+=batch_pred
             theta_params=optimizer.gradient_descent(theta_params, batch_pred, y_tr[batch:batch+n_batch_size], X_reshaped[batch])
         
@@ -139,7 +150,7 @@ def train(circuit, n_epochs, n_batch_size, initial_thetas,lr, X_tr, y_tr, X_te, 
         acc_score_test=accuracy_score(y_te, test_pred)
         
         print(f"Epoch: {epoch}, loss:{train_loss}, accuracy:{acc_score}")
-        #Saving the results
+        #Appends the results to lists
         loss_train.append(train_loss)
         accuracy_train.append(acc_score)
         prediction_epochs_train.append(temp_list)
@@ -217,12 +228,12 @@ def investigate_lr_params(folder_name, folder_name2, lr_list, n_params_list):
     
     return
 
-
+#Below is just some code handling the runs of functions
+#and saving the predictions to file
 if ansatz==0:
     folder="ansatz_0/"
 else:
     folder="ansatz_1/"
-
 
 file_folder=data_path(path,folder)
 
@@ -237,70 +248,27 @@ elif inspect_lr_param==True:
     n_par=[10, 14, 18, 22, 26, 30]
     investigate_lr_params(file_folder, file_folder2, lrs, n_par)
 
-elif regular_run==True:
+elif regular_run_save==True:
+    #Paralellize the code to save some time
+    pid = os.fork()
+    if pid:
+        train_loss, train_accuracy, test_loss, test_accuracy =train(qc, epochs, batch_size, 
+                                                            init_params, learning_rate, X_tr=X_train,
+                                                            y_tr=y_train, X_te=X_test,y_te=y_test)
+        np.save("ansatz_0/trainloss_optimal.npy", np.array(train_loss))
+        np.save("ansatz_0/testloss_optimal.npy", np.array(test_loss))
+        np.save("ansatz_0/trainacc_optimal.npy", np.array(train_accuracy))
+        np.save("ansatz_0/testacc_optimal.npy", np.array(test_accuracy))
+    
+    else:
+        train_loss, train_accuracy, test_loss, test_accuracy =train(qc_2, epochs, batch_size, 
+                                                            init_params, learning_rate, X_tr=X_train,
+                                                            y_tr=y_train, X_te=X_test,y_te=y_test)
+        np.save("ansatz_1/trainloss_optimal.npy", np.array(train_loss))
+        np.save("ansatz_1/testloss_optimal.npy", np.array(test_loss))
+        np.save("ansatz_1/trainacc_optimal.npy", np.array(train_accuracy))
+        np.save("ansatz_1/testacc_optimal.npy", np.array(test_accuracy))
+else:
     train_loss, train_accuracy, test_loss, test_accuracy =train(qc, epochs, batch_size, 
                                                             init_params, learning_rate, X_tr=X_train,
                                                             y_tr=y_train, X_te=X_test,y_te=y_test)
-
-
-
-#np.save('trainlosses.npy', np.array(trainlosses))
-
-
-
-
-#Analyze results
-
-
-
-
-
-#Next steps:
-"""
-Things to try to fix the training:
--Switch up the ansatz, create an easier one and switch up the entanglement
--Have a look at the loss function, maybe implement the one in the project, scikit loss?
--Okay, should I try to sigmoid the function?
-
-Do this now: Fix another ansats, put it in the descriptin, change loss function to binary cross,
-             have a look at the derivative og the binary cross
-
--Try training the thing
-    -Explore with the batch size, batch size is how many samples 
-    that will be predicted before the gradient descent does one loop. 1 loop only? i think so
--Try adding epochs and such to see how much the loss/accuracy is
--Maybe try plotting as a function of parameters, and play with initialization params of theta
--Maybe spread out the ansatz making it look better
--Add another ansatz, cool one in lin 6 bookmark
--try both ansatzes on breast cancer dataset
--Try to use an entanglement encoder which is a cnot but on all cirquits in separate thing
--Explore best epoch and batch size
--Choose batch and epoch from test or train or validation set?
--Normalized, so the largest output is 1 and smallest output is 0,
-therefor softmax or sigmoid is not nessecary.
--Remember to seed the initialization theta
--Some dead neurons, test with it
--For each computed training epoch, use the same parameters on testing? for each batch even?
-
-Mean training loss of all batches for a specific epoch
-Then use the same output parameters on the test set
-
-#-Make it ready to plot
--Fix the ansatz and batch maybe
--Plot learning rate and diff parameters with fork
--Choose the best lr and param
--Maybe explore the initialization also? gaussian/uniform, initialiation rate
-
--Plot train accuracy and train loss with test, beside or in same plot?
-
-
-
-Reoport:
-error and accuracy vs batch size
-error and accuracy vs epoch
-lr vs accuracy or error
-accuracy as a function of parameters with different learning rates
-
-
-Appendix: derivative of gradient
-"""
