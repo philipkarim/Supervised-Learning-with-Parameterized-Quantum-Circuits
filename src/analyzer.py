@@ -3,7 +3,7 @@ import numpy as np
 from utils import plotter
 #import matplotlib as plt
 import matplotlib.pyplot as plt
-
+import seaborn as sns
 
 def plott_distribution():
     #This part can be done in a much mores sophisticated way, rewrite if time
@@ -42,27 +42,20 @@ def plott_distribution():
 
 
 def investigate_lr_nparam(ansatz, test_train):
-    plt.rcParams.update({'font.size':12})
-    #plt.rcParams['mathtext.fontset']='stix'
-    #plt.rcParams['font.family']='STIXGeneral'
-    #plt.rcParams['xtick.labelsize'] = 2
-    #plt.rcParams['ytick.labelsize'] = 2
+    sns.set_style("darkgrid")
+    plt.rcParams.update({'font.size':14})
     plt.rcParams['legend.fontsize'] = 12
-    plt.rcParams["figure.figsize"] = (12,5)
-
-
-    rates = [0.1, 0.01]
-    Ns = [10,14,18,22, 26]
+    plt.rcParams["figure.figsize"] = (13.1,8.65)   #(13.1,7.4)
+    #plt.rcParams['xtick.labelsize'] = 20
+    #plt.rcParams['ytick.labelsize'] = 20
+    rates = [0.1, 0.01, 0.001, 0.0001]
+    Ns = [10,14,18,22, 26, 30]
 
     colors = ["tab:blue","tab:orange","tab:green","tab:red", "tab:purple", "tab:olive"]
     ticks = ["*","s",".","D"]
 
-
     fig2=plt.figure()
     ax2=fig2.add_subplot(111)
-    #fig1=plt.figure()
-    #ax1=fig1.add_subplot(111)
-    highest_index=0
     start=16
 
     for N in range(len(Ns)):
@@ -70,33 +63,18 @@ def investigate_lr_nparam(ansatz, test_train):
             filename_loss = "Results/saved_data/iris/ansatz_"+str(ansatz)+"/lr_params/"+test_train+"_lr%s_n%s.npy" %(rates[rate], Ns[N])
             #print(filename_loss)
             loss = np.fromfile(filename_loss)
-            print(len(loss))
-            print(loss)
             loss = loss[start:len(loss)+start]
-            print(len(loss))
-            print(loss)
-            #Tresholding the loss
-            #print(loss)
-            #Tresholding the loss
-            """
-            for i in range(len(loss)):
-                if loss[i]<0 or loss[i]>1:
-                    loss[i]=0
-                    if i>highest_index:
-                        highest_index=i
-            """
+        
             iterations = np.arange(len(loss))
-            ax2.plot(iterations,loss,color=colors[N],marker=ticks[rate],label="N=%s;Rate=%s" %(Ns[N],rates[rate]))
-            #ax1.plot(iterations2,loss[highest_index+1:],color=colors[N],marker=ticks[rate],label="N=%s;Rate=%s" %(Ns[N],rates[rate]))
+            ax2.plot(iterations,loss,color=colors[N],marker=ticks[rate],label=r"n=%s;$\gamma$=%s" %(Ns[N],rates[rate]))
 
     ax2.legend(prop={'size':30})
-    ax2.set_xlabel("Epochs",fontsize=12)
-    ax2.set_ylabel("Loss",fontsize=12)
+    ax2.set_xlabel("Epochs",fontsize=16)
+    ax2.set_ylabel("Loss",fontsize=16)
     box = ax2.get_position()
     ax2.set_position([box.x0, box.y0, box.width * 0.92, box.height])
     ax2.legend(loc='center left', bbox_to_anchor=(1, 0.5))
     plt.show()
-
     return
 
 
@@ -117,6 +95,6 @@ def optimal_run():
     return
 
 
-
-investigate_lr_nparam(0, "train")
+plott_distribution()
+#investigate_lr_nparam(0, "test")
 #optimal_run()

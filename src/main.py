@@ -3,21 +3,14 @@ import os
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
 #Importing packages 
 
-from types import coroutine
-
 import numpy as np
 import matplotlib.pyplot as plt
 import random
 
-#Importing qiskit
-import qiskit as qk
-from qiskit.visualization import *
-
 from sklearn import datasets
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import scale, StandardScaler, MinMaxScaler
+from sklearn.preprocessing import MinMaxScaler
 from sklearn.utils import shuffle
-from sklearn.datasets import load_breast_cancer
 
 #Import the parameterized quantum circuit class
 from PQC import QML
@@ -28,25 +21,24 @@ from utils import *
 random.seed(2021)
 
 #Set parameters
-n_params=10
-learning_rate=0.1
-batch_size=1
-init_params=np.random.uniform(0.,0.01,size=n_params)
-ansatz=0
-epochs=50
+n_params=18         #Number of variational parameters
+learning_rate=0.01  #Learning rate
+init_params=np.random.uniform(0.,0.01,size=n_params) #Distribution of the initial variational parameters
+ansatz=0            #Choose ansatz: 0 represent ansatz 1 in the report, 1 represent ansatz 2 in the report
+epochs=50           #Number of epochs
+batch_size=1        #Batch size, set equal to 1
 
 #Choose type of investigation, if all parameters are chosen prehand, 
 # set all to false
 inspect_distribution=False
+inspect_lr_param=True
 regular_run_save=False
-inspect_lr_param=False
 
-
-#Handling the data
 #Choose a datset
 dataset="iris"
 #dataset="breastcancer"
 
+#Handling the data
 if dataset=="iris":
     iris = datasets.load_iris()
     X = iris.data
@@ -56,15 +48,12 @@ if dataset=="iris":
     X = X[idx,:]
     X=np.squeeze(X, axis=0)
     y = y[idx]
-    import collections
-    dirname=collections
-    #dirname=os.path.dirname()
-    #print(dirname)
+    
     path="Results/saved_data/iris/"
 
 
 elif dataset=="breastcancer":
-    data = load_breast_cancer()
+    data = datasets.load_breast_cancer()
     X = data.data #features
     y = data.target #targets
 
@@ -99,7 +88,7 @@ def train(circuit, n_epochs, n_batch_size, initial_thetas,lr, X_tr, y_tr, X_te, 
     Args:
             circuit:        Quantum circuit (object from the QML class)
             n_epochs:       Number of epochs(integer) 
-            n_batch_size:   Batch size (Integer)
+            n_batch_size:   Batch size (integer)
             initial_thetas: Initialisation values of the variational parameters
                             (List or array)
             lr:             Learning rate (float)
@@ -214,7 +203,8 @@ def investigate_lr_params(folder_name, folder_name2, lr_list, n_params_list):
         for i in lr_list:
             for j in n_params_list:
                 print("Ansatz 0: ", j, i)
-                train_loss, train_accuracy, test_loss, test_accuracy=train(qc, epochs, batch_size, np.random.uniform(0.,0.1,size=j), i, X_tr=X_train,y_tr=y_train, X_te=X_test,y_te=y_test)
+                qc_lr_n=QML(0,X.shape[1], 1, j, backend="qasm_simulator", shots=1024)
+                train_loss, train_accuracy, test_loss, test_accuracy=train(qc_lr_n, epochs, batch_size, np.random.uniform(0.,0.1,size=j), i, X_tr=X_train,y_tr=y_train, X_te=X_test,y_te=y_test)
                 np.save(data_path(folder_name, "lr_params/train_lr"+str(i)+"_n"+str(j)+".npy"), np.array(train_loss))
                 np.save(data_path(folder_name, "lr_params/test_lr"+str(i)+"_n"+str(j)+".npy"), np.array(test_loss))
 
@@ -222,7 +212,8 @@ def investigate_lr_params(folder_name, folder_name2, lr_list, n_params_list):
         for ii in lr_list:
             for jj in n_params_list:
                 print("Ansatz 1: ",jj, ii)
-                train_loss, train_accuracy, test_loss, test_accuracy=train(qc_2, epochs, batch_size, np.random.uniform(0.,0.1,size=jj), ii, X_tr=X_train,y_tr=y_train, X_te=X_test,y_te=y_test)
+                qc_2_lr_n=QML(1,X.shape[1], 1, jj, backend="qasm_simulator", shots=1024)
+                train_loss, train_accuracy, test_loss, test_accuracy=train(qc_2_lr_n, epochs, batch_size, np.random.uniform(0.,0.1,size=jj), ii, X_tr=X_train,y_tr=y_train, X_te=X_test,y_te=y_test)
                 np.save(data_path(folder_name2, "lr_params/train_lr"+str(ii)+"_n"+str(jj)+".npy"), np.array(train_loss))
                 np.save(data_path(folder_name2, "lr_params/test_lr"+str(ii)+"_n"+str(jj)+".npy"), np.array(test_loss))
     
@@ -255,19 +246,19 @@ elif regular_run_save==True:
         train_loss, train_accuracy, test_loss, test_accuracy =train(qc, epochs, batch_size, 
                                                             init_params, learning_rate, X_tr=X_train,
                                                             y_tr=y_train, X_te=X_test,y_te=y_test)
-        np.save("ansatz_0/trainloss_optimal.npy", np.array(train_loss))
-        np.save("ansatz_0/testloss_optimal.npy", np.array(test_loss))
-        np.save("ansatz_0/trainacc_optimal.npy", np.array(train_accuracy))
-        np.save("ansatz_0/testacc_optimal.npy", np.array(test_accuracy))
+        np.save(path+"ansatz_0/trainloss_optimal.npy", np.array(train_loss))
+        np.save(path+"ansatz_0/testloss_optimal.npy", np.array(test_loss))
+        np.save(path+"ansatz_0/trainacc_optimal.npy", np.array(train_accuracy))
+        np.save(path+"ansatz_0/testacc_optimal.npy", np.array(test_accuracy))
     
     else:
         train_loss, train_accuracy, test_loss, test_accuracy =train(qc_2, epochs, batch_size, 
-                                                            init_params, learning_rate, X_tr=X_train,
+                                                            np.random.uniform(0.,0.01,size=30), learning_rate, X_tr=X_train,
                                                             y_tr=y_train, X_te=X_test,y_te=y_test)
-        np.save("ansatz_1/trainloss_optimal.npy", np.array(train_loss))
-        np.save("ansatz_1/testloss_optimal.npy", np.array(test_loss))
-        np.save("ansatz_1/trainacc_optimal.npy", np.array(train_accuracy))
-        np.save("ansatz_1/testacc_optimal.npy", np.array(test_accuracy))
+        np.save(path+"ansatz_1/trainloss_optimal.npy", np.array(train_loss))
+        np.save(path+"ansatz_1/testloss_optimal.npy", np.array(test_loss))
+        np.save(path+"ansatz_1/trainacc_optimal.npy", np.array(train_accuracy))
+        np.save(path+"ansatz_1/testacc_optimal.npy", np.array(test_accuracy))
 else:
     train_loss, train_accuracy, test_loss, test_accuracy =train(qc, epochs, batch_size, 
                                                             init_params, learning_rate, X_tr=X_train,
