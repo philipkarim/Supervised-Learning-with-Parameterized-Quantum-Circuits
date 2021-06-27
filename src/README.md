@@ -8,4 +8,4 @@ All parameters are defined in `main.py`, the training and testing also happens i
 The code used for plotting and analyzing the results can be found in `analyzer.py`.
 
 ## Running the project:
-The requirements used to run the project can be found in `requirements.txt`. In addition, when running the functions `investigate_distribution()` and `investigate_lr_params()` in `main.py` a unix based system is required due to the utillization of the fork() command. The project can still be ran with the `train.py()` function.
+The requirements used to run the project can be found in `requirements.txt`. In addition, when running the functions `investigate_distribution()` and `investigate_lr_params()` in `main.py` a unix based system is required due to the utillization of the fork() command. The project can still be ran with the `train.py()` function on all OS.
