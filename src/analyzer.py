@@ -38,6 +38,7 @@ def plott_distribution():
 
     plotter(train_a0_N0_25, "(0, 0.25)",  train_a0_N0_1, "(0, 0.1)", train_a0_N0_01, "(0, 0.01)", train_a0_N0_001, "(0, 0.001)",x_axis=range(0,len(train_a0_N0_25)), x_label="Epochs", y_label="Loss")
     plotter(test_a0_N0_25, "(0, 0.25)",  test_a0_N0_1, "(0, 0.1)", test_a0_N0_01, "(0, 0.01)", test_a0_N0_001, "(0, 0.001)",x_axis=range(0,len(test_a0_N0_25)), x_label="Epochs", y_label="Loss")
+    
     return
 
 
@@ -88,13 +89,13 @@ def optimal_run():
     a1_test_loss=np.load("Results/saved_data/iris/ansatz_1/ansatz_0/testloss_optimal.npy")
     a1_train_acc=np.load("Results/saved_data/iris/ansatz_1/ansatz_0/trainacc_optimal.npy")
     a1_test_acc=np.load("Results/saved_data/iris/ansatz_1/ansatz_0/testacc_optimal.npy")
-
+    
     plotter(a0_train_loss, "Train loss",  a0_test_loss, "Validation loss", a0_train_acc, "Train Accuracy", a0_test_acc, "Validation accuracy",x_axis=range(0,len(a0_train_loss)), x_label="Epochs", y_label="Loss & Accuracy")
     plotter(a1_train_loss, "Train loss",  a1_test_loss, "Validation loss", a1_train_acc, "Train Accuracy", a1_test_acc, "Validation accuracy",x_axis=range(0,len(a1_train_loss)), x_label="Epochs", y_label="Loss & Accuracy")
 
     return
 
 
-plott_distribution()
+#plott_distribution()
 #investigate_lr_nparam(0, "test")
 #optimal_run()
