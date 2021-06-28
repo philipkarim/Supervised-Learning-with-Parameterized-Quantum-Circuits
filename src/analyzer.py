@@ -97,5 +97,5 @@ def optimal_run():
 
 
 #plott_distribution()
-#investigate_lr_nparam(0, "test")
+investigate_lr_nparam(0, "test")
 #optimal_run()
