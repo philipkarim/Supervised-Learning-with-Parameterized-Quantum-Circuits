@@ -17,22 +17,22 @@ from PQC import QML
 from optimize_loss import optimize
 from utils import *
 
-#Seeding the program
+#Seeding the program to ensure reproducibillity
 random.seed(2021)
 
 #Set parameters
-n_params=18         #Number of variational parameters
+n_params=26         #Number of variational parameters
 learning_rate=0.01  #Learning rate
 init_params=np.random.uniform(0.,0.01,size=n_params) #Distribution of the initial variational parameters
 ansatz=0            #Choose ansatz: 0 represent ansatz 1 in the report, 1 represent ansatz 2 in the report
-epochs=50           #Number of epochs
+epochs=1            #Number of epochs
 batch_size=1        #Batch size, set equal to 1
 
 #Choose type of investigation, if all parameters are chosen prehand, 
 # set all to false
 inspect_distribution=False
-inspect_lr_param=True
-regular_run_save=False
+inspect_lr_param=False
+regular_run_save=True
 
 #Choose a datset
 dataset="iris"
@@ -79,7 +79,7 @@ X_test = scaler2.transform(X_test)
 
 #Creating some qunatum cirquit object
 qc=QML(ansatz,X.shape[1], 1, n_params, backend="qasm_simulator", shots=1024)
-qc_2=QML(1,X.shape[1], 1, n_params, backend="qasm_simulator", shots=1024)
+qc_2=QML(1,X.shape[1], 1, 30, backend="qasm_simulator", shots=1024)
 
 def train(circuit, n_epochs, n_batch_size, initial_thetas,lr, X_tr, y_tr, X_te, y_te):
     """
