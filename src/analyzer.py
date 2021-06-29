@@ -120,4 +120,4 @@ def optimal_run(folder):
 
 #plott_distribution()
 #investigate_lr_nparam(0, "test")
-optimal_run("breastcancer")
+optimal_run("iris")

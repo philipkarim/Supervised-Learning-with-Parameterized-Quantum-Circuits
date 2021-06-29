@@ -2,7 +2,6 @@
 import os
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
 #Importing packages 
-
 import numpy as np
 import matplotlib.pyplot as plt
 import random
@@ -12,7 +11,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.utils import shuffle
 
-#Import the parameterized quantum circuit class
+#Import the other classes and functions
 from PQC import QML
 from optimize_loss import optimize
 from utils import *
@@ -21,7 +20,7 @@ from utils import *
 random.seed(2021)
 
 #Set parameters
-n_params=26         #Number of variational parameters
+n_params=10         #Number of variational parameters
 learning_rate=0.01  #Learning rate
 init_params=np.random.uniform(0.,0.01,size=n_params) #Distribution of the initial variational parameters
 ansatz=0            #Choose ansatz: 0 represent ansatz 1 in the report, 1 represent ansatz 2 in the report
@@ -35,8 +34,7 @@ inspect_lr_param=False
 regular_run_save=False
 
 #Choose a datset
-#dataset="iris"
-dataset="breastcancer"
+dataset="iris"
 
 #Handling the data
 if dataset=="iris":
@@ -50,16 +48,6 @@ if dataset=="iris":
     y = y[idx]
     
     path="Results/saved_data/iris/"
-
-
-elif dataset=="breastcancer":
-    data = datasets.load_breast_cancer()
-    X = data.data #features
-    y = data.target #targets
-
-    #Uses the first four feutures
-    X=np.delete(X, np.s_[4:len(X[0])], axis=1) 
-    path="Results/saved_data/breastcancer/"
 
 else:
     print("No datset chosen\nClosing the program")
