@@ -79,16 +79,16 @@ def investigate_lr_nparam(ansatz, test_train):
     return
 
 
-def optimal_run():  
-    a0_train_loss=np.load("Results/saved_data/iris/ansatz_0/trainloss_optimal.npy")
-    a0_test_loss=np.load("Results/saved_data/iris/ansatz_0/testloss_optimal.npy")
-    a0_train_acc=np.load("Results/saved_data/iris/ansatz_0/trainacc_optimal.npy")
-    a0_test_acc=np.load("Results/saved_data/iris/ansatz_0/testacc_optimal.npy")
+def optimal_run(folder):  
+    a0_train_loss=np.load("Results/saved_data/"+folder+"/ansatz_0/trainloss_optimal.npy")
+    a0_test_loss=np.load("Results/saved_data/"+folder+"/ansatz_0/testloss_optimal.npy")
+    a0_train_acc=np.load("Results/saved_data/"+folder+"/ansatz_0/trainacc_optimal.npy")
+    a0_test_acc=np.load("Results/saved_data/"+folder+"/ansatz_0/testacc_optimal.npy")
     
-    a1_train_loss=np.load("Results/saved_data/iris/ansatz_1/trainloss_optimal.npy")
-    a1_test_loss=np.load("Results/saved_data/iris/ansatz_1/testloss_optimal.npy")
-    a1_train_acc=np.load("Results/saved_data/iris/ansatz_1/trainacc_optimal.npy")
-    a1_test_acc=np.load("Results/saved_data/iris/ansatz_1/testacc_optimal.npy")
+    a1_train_loss=np.load("Results/saved_data/"+folder+"/ansatz_1/trainloss_optimal.npy")
+    a1_test_loss=np.load("Results/saved_data/"+folder+"/ansatz_1/testloss_optimal.npy")
+    a1_train_acc=np.load("Results/saved_data/"+folder+"/ansatz_1/trainacc_optimal.npy")
+    a1_test_acc=np.load("Results/saved_data/"+folder+"/ansatz_1/testacc_optimal.npy")
     
     plotter(a0_train_loss, "Train loss",  a0_test_loss, "Validation loss", a0_train_acc, "Train Accuracy", a0_test_acc, "Validation accuracy",x_axis=range(0,len(a0_train_loss)), x_label="Epochs", y_label="Loss & Accuracy")
     plotter(a1_train_loss, "Train loss",  a1_test_loss, "Validation loss", a1_train_acc, "Train Accuracy", a1_test_acc, "Validation accuracy",x_axis=range(0,len(a1_train_loss)), x_label="Epochs", y_label="Loss & Accuracy")
@@ -114,10 +114,10 @@ def optimal_run():
     print(f"Best accuracy epoch:{a1_acc_epoch}")
     print(f"Best loss          : {a1_best_loss}")
     print(f"Best loss epoch    : {a1_loss_epoch}")
-    
+        
     return
 
 
 #plott_distribution()
 #investigate_lr_nparam(0, "test")
-optimal_run()
+optimal_run("breastcancer")
