@@ -25,7 +25,7 @@ n_params=26         #Number of variational parameters
 learning_rate=0.01  #Learning rate
 init_params=np.random.uniform(0.,0.01,size=n_params) #Distribution of the initial variational parameters
 ansatz=0            #Choose ansatz: 0 represent ansatz 1 in the report, 1 represent ansatz 2 in the report
-epochs=100           #Number of epochs
+epochs=50           #Number of epochs
 batch_size=1        #Batch size, set equal to 1
 
 #Choose type of investigation, if all parameters are chosen prehand, 
@@ -35,8 +35,8 @@ inspect_lr_param=False
 regular_run_save=True
 
 #Choose a datset
-dataset="iris"
-#dataset="breastcancer"
+#dataset="iris"
+dataset="breastcancer"
 
 #Handling the data
 if dataset=="iris":
