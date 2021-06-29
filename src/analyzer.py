@@ -80,22 +80,44 @@ def investigate_lr_nparam(ansatz, test_train):
 
 
 def optimal_run():  
-    a0_train_loss=np.load("Results/saved_data/iris/ansatz_0/ansatz_0/trainloss_optimal.npy")
-    a0_test_loss=np.load("Results/saved_data/iris/ansatz_0/ansatz_0/testloss_optimal.npy")
-    a0_train_acc=np.load("Results/saved_data/iris/ansatz_0/ansatz_0/trainacc_optimal.npy")
-    a0_test_acc=np.load("Results/saved_data/iris/ansatz_0/ansatz_0/testacc_optimal.npy")
+    a0_train_loss=np.load("Results/saved_data/iris/ansatz_0/trainloss_optimal.npy")
+    a0_test_loss=np.load("Results/saved_data/iris/ansatz_0/testloss_optimal.npy")
+    a0_train_acc=np.load("Results/saved_data/iris/ansatz_0/trainacc_optimal.npy")
+    a0_test_acc=np.load("Results/saved_data/iris/ansatz_0/testacc_optimal.npy")
     
-    a1_train_loss=np.load("Results/saved_data/iris/ansatz_1/ansatz_0/trainloss_optimal.npy")
-    a1_test_loss=np.load("Results/saved_data/iris/ansatz_1/ansatz_0/testloss_optimal.npy")
-    a1_train_acc=np.load("Results/saved_data/iris/ansatz_1/ansatz_0/trainacc_optimal.npy")
-    a1_test_acc=np.load("Results/saved_data/iris/ansatz_1/ansatz_0/testacc_optimal.npy")
+    a1_train_loss=np.load("Results/saved_data/iris/ansatz_1/trainloss_optimal.npy")
+    a1_test_loss=np.load("Results/saved_data/iris/ansatz_1/testloss_optimal.npy")
+    a1_train_acc=np.load("Results/saved_data/iris/ansatz_1/trainacc_optimal.npy")
+    a1_test_acc=np.load("Results/saved_data/iris/ansatz_1/testacc_optimal.npy")
     
     plotter(a0_train_loss, "Train loss",  a0_test_loss, "Validation loss", a0_train_acc, "Train Accuracy", a0_test_acc, "Validation accuracy",x_axis=range(0,len(a0_train_loss)), x_label="Epochs", y_label="Loss & Accuracy")
     plotter(a1_train_loss, "Train loss",  a1_test_loss, "Validation loss", a1_train_acc, "Train Accuracy", a1_test_acc, "Validation accuracy",x_axis=range(0,len(a1_train_loss)), x_label="Epochs", y_label="Loss & Accuracy")
+    
+    a0_best_acc=np.nanmax(a0_test_acc)
+    a0_acc_epoch=np.where(a0_test_acc==np.nanmax(a0_test_acc))
+    a0_best_loss=np.nanmin(a0_test_loss)
+    a0_loss_epoch=np.where(a0_test_loss==np.nanmin(a0_test_loss))
+    
+    a1_best_acc=np.nanmax(a1_test_acc)
+    a1_acc_epoch=np.where(a1_test_acc==np.nanmax(a1_test_acc))
+    a1_best_loss=np.nanmin(a1_test_loss)
+    a1_loss_epoch=np.where(a1_test_loss==np.nanmin(a1_test_loss))
+    
+    print("Ansats 1:")
+    print(f"Best accuracy      : {a0_best_acc}")
+    print(f"Best accuracy epoch:{a0_acc_epoch}")
+    print(f"Best loss          : {a0_best_loss}")
+    print(f"Best loss epoch    : {a0_loss_epoch}")
 
+    print("Ansats 2:")
+    print(f"Best accuracy      : {a1_best_acc}")
+    print(f"Best accuracy epoch:{a1_acc_epoch}")
+    print(f"Best loss          : {a1_best_loss}")
+    print(f"Best loss epoch    : {a1_loss_epoch}")
+    
     return
 
 
 #plott_distribution()
-investigate_lr_nparam(0, "test")
-#optimal_run()
+#investigate_lr_nparam(0, "test")
+optimal_run()

@@ -60,7 +60,6 @@ def plotter(*args, x_axis,x_label, y_label):
             plt.legend()
         plt.xlabel(x_label,fontsize=12)
         plt.ylabel(y_label,fontsize=12)
-        plt.ylim(0.35,0.67)
     else:
         plt.plot(x_axis, args[0])
         plt.xlabel(x_label,fontsize=12)
