@@ -32,7 +32,7 @@ batch_size=1        #Batch size, set equal to 1
 # set all to false
 inspect_distribution=False
 inspect_lr_param=False
-regular_run_save=True
+regular_run_save=False
 
 #Choose a datset
 #dataset="iris"
@@ -249,21 +249,21 @@ elif regular_run_save==True:
     pid = os.fork()
     if pid:
         train_loss, train_accuracy, test_loss, test_accuracy =train(qc, epochs, batch_size, 
-                                                            init_params, learning_rate, X_tr=X_train,
-                                                            y_tr=y_train, X_te=X_test,y_te=y_test)
-        np.save(path+"ansatz_0/trainloss_optimal.npy", np.array(train_loss))
-        np.save(path+"ansatz_0/testloss_optimal.npy", np.array(test_loss))
-        np.save(path+"ansatz_0/trainacc_optimal.npy", np.array(train_accuracy))
-        np.save(path+"ansatz_0/testacc_optimal.npy", np.array(test_accuracy))
-    
-    else:
-        train_loss, train_accuracy, test_loss, test_accuracy =train(qc_2, epochs, batch_size, 
                                                             np.random.uniform(0.,0.01,size=30), learning_rate, X_tr=X_train,
                                                             y_tr=y_train, X_te=X_test,y_te=y_test)
         np.save(path+"ansatz_1/trainloss_optimal.npy", np.array(train_loss))
         np.save(path+"ansatz_1/testloss_optimal.npy", np.array(test_loss))
         np.save(path+"ansatz_1/trainacc_optimal.npy", np.array(train_accuracy))
         np.save(path+"ansatz_1/testacc_optimal.npy", np.array(test_accuracy))
+    else:
+        train_loss, train_accuracy, test_loss, test_accuracy =train(qc_2, epochs, batch_size, 
+                                                            init_params, learning_rate, X_tr=X_train,
+                                                            y_tr=y_train, X_te=X_test,y_te=y_test)
+        np.save(path+"ansatz_0/trainloss_optimal.npy", np.array(train_loss))
+        np.save(path+"ansatz_0/testloss_optimal.npy", np.array(test_loss))
+        np.save(path+"ansatz_0/trainacc_optimal.npy", np.array(train_accuracy))
+        np.save(path+"ansatz_0/testacc_optimal.npy", np.array(test_accuracy))
+        
 else:
     train_loss, train_accuracy, test_loss, test_accuracy =train(qc, epochs, batch_size, 
                                                             init_params, learning_rate, X_tr=X_train,
